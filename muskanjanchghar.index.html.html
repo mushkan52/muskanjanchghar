@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PathLab Pro — Pathology Lab Management Software</title>
+<style>
+:root{
+  --bg:#f4f6fb; --panel:#ffffff; --ink:#12203a; --muted:#6b7a90; --line:#e3e8f0;
+  --brand:#0f6fde; --brand2:#0a56ad; --side:#0b1f3a; --side2:#0a1930;
+  --ok:#1a9e63; --warn:#e08a00; --bad:#d63b3b; --hi:#c92a2a;
+  --r:12px; --sh:0 6px 22px rgba(18,32,58,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:"Segoe UI",Roboto,system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+button,input,select,textarea{font-family:inherit;font-size:14px}
+a{color:var(--brand);text-decoration:none}
+.hidden{display:none!important}
+
+/* ---------- LOGIN ---------- */
+#login{position:fixed;inset:0;background:linear-gradient(135deg,#08203f 0%,#0f6fde 60%,#16a3c9 100%);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.loginCard{background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.35);width:min(420px,100%);padding:34px 30px;text-align:center}
+.logoMark{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#0f6fde,#16a3c9);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;margin:0 auto 14px}
+.loginCard h1{margin:0 0 4px;font-size:22px}
+.loginCard p.sub{margin:0 0 22px;color:var(--muted);font-size:13px}
+.field{text-align:left;margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(15,111,222,.12)}
+.btn{display:inline-flex;align-items:center;gap:7px;justify-content:center;padding:10px 16px;border:none;border-radius:9px;background:var(--brand);color:#fff;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--brand2)}
+.btn.wide{width:100%;padding:12px}
+.btn.ghost{background:#eef3fa;color:var(--ink)}
+.btn.ghost:hover{background:#e2ebf7}
+.btn.ok{background:var(--ok)} .btn.ok:hover{background:#148050}
+.btn.bad{background:var(--bad)} .btn.bad:hover{background:#b02c2c}
+.btn.warn{background:var(--warn)} .btn.warn:hover{background:#b96f00}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:7px}
+.hint{font-size:12px;color:var(--muted);margin-top:14px}
+.err{color:var(--bad);font-size:13px;margin-top:8px;min-height:18px}
+
+/* ---------- SHELL ---------- */
+#app{display:flex;min-height:100vh}
+aside{width:236px;background:var(--side);color:#c9d6ea;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex:0 0 236px}
+.brand{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;gap:10px;align-items:center}
+.brand .bm{flex:none;width:38px;height:38px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#0f6fde,#16a3c9);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+.brand b{display:block;color:#fff;font-size:14px;line-height:1.2}
+.brand span{font-size:11px;color:#8fa6c6}
+nav{padding:10px 8px;overflow:auto;flex:1}
+nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;color:#c9d6ea;font-size:13.5px;margin-bottom:2px;cursor:pointer}
+nav a:hover{background:rgba(255,255,255,.07);color:#fff}
+nav a.active{background:linear-gradient(135deg,#0f6fde,#0a56ad);color:#fff;font-weight:600}
+nav a .ic{width:20px;text-align:center;font-size:15px}
+.sideFoot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;color:#8fa6c6}
+.who{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.avatar{width:30px;height:30px;border-radius:50%;background:#16a3c9;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px}
+.who b{color:#fff;font-size:12.5px;display:block}
+.who small{color:#8fa6c6;font-size:11px;text-transform:capitalize}
+main{flex:1;min-width:0;display:flex;flex-direction:column}
+header.top{background:#fff;border-bottom:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;position:sticky;top:0;z-index:20}
+header.top h2{margin:0;font-size:18px}
+header.top .crumbs{color:var(--muted);font-size:12px}
+.content{padding:20px 22px 60px}
+
+/* ---------- UI ---------- */
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.g4,.g3,.g2{grid-template-columns:1fr}aside{display:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.card .hd{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card .hd h3{margin:0;font-size:14.5px}
+.card .bd{padding:16px}
+.kpi{padding:16px}
+.kpi .lab{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.kpi .val{font-size:26px;font-weight:800;margin:6px 0 2px}
+.kpi .delta{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+th{background:#f7f9fd;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0}
+tbody tr:hover{background:#fafcff}
+.tblWrap{max-height:520px;overflow:auto;border-radius:0 0 var(--r) var(--r)}
+.pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.p-green{background:#e3f7ee;color:#0f7a4c}
+.p-amber{background:#fdf0dc;color:#a86500}
+.p-blue{background:#e5effd;color:#0a56ad}
+.p-red{background:#fde7e7;color:#b02c2c}
+.p-grey{background:#eef1f6;color:#5a6b82}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+input.search{padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;min-width:220px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.empty{padding:34px;text-align:center;color:var(--muted)}
+.split{display:grid;grid-template-columns:340px 1fr;gap:14px}
+@media(max-width:980px){.split{grid-template-columns:1fr}}
+.pickList{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:9px}
+.pickList .it{padding:9px 11px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;cursor:pointer}
+.pickList .it:hover{background:#f6f9ff}
+.pickList .it small{color:var(--muted);display:block;font-size:11.5px}
+.chip{background:#eef3fa;border:1px solid #dce6f4;border-radius:99px;padding:4px 10px;font-size:12px;display:inline-flex;gap:6px;align-items:center}
+.chip b{font-weight:600}
+.chip button{border:none;background:none;color:var(--bad);cursor:pointer;font-weight:700}
+.flags{font-weight:800}
+.fH{color:var(--hi)} .fL{color:#0a56ad}
+.flagBadge{background:#fde7e7;color:#b02c2c;padding:2px 7px;border-radius:6px;font-weight:800;font-size:11px}
+.modal{position:fixed;inset:0;background:rgba(10,25,48,.55);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:60;overflow:auto}
+.modal .box{background:#fff;border-radius:14px;width:min(760px,100%);box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal .box .hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal .box .bd{padding:18px}
+.modal .box .ft{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+.x{border:none;background:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.note{background:#f2f7ff;border:1px solid #d8e6fb;border-radius:9px;padding:11px 13px;font-size:12.5px;color:#31507a}
+.tag{font-size:11px;color:var(--muted)}
+.bar{height:9px;border-radius:99px;background:#eef1f6;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#0f6fde,#16a3c9)}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:16px;flex-wrap:wrap}
+.tabs button{border:none;background:none;padding:9px 13px;border-bottom:2px solid transparent;color:var(--muted);font-weight:600;cursor:pointer}
+.tabs button.active{color:var(--brand);border-bottom-color:var(--brand)}
+.toast{position:fixed;bottom:22px;right:22px;background:#0b1f3a;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:99;font-size:13px;opacity:0;transform:translateY(10px);transition:.25s}
+.toast.show{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="login">
+  <div class="loginCard">
+    <div class="logoMark" id="loginLogo">PL</div>
+    <h1 id="loginLab">PathLab Pro</h1>
+    <p class="sub">Pathology Laboratory Management Software</p>
+    <div class="field">
+      <label>Username</label>
+      <input id="lgUser" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="lgPass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn wide" onclick="doLogin()">Sign In</button>
+    <div class="err" id="lgErr"></div>
+    <div class="hint">Default login: <b>admin</b> / <b>admin123</b><br><span id="loginSupport"></span></div>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app" class="hidden">
+  <aside>
+    <div class="brand">
+      <div class="bm" id="sideLogo">PL</div>
+      <div><b id="sideLab">PathLab Pro</b><span id="sideTag">Diagnostics</span></div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="sideFoot">
+      <div class="who">
+        <div class="avatar" id="meAv">A</div>
+        <div><b id="meName">Admin</b><small id="meRole">admin</small></div>
+      </div>
+      <a onclick="doLogout()" style="color:#ffb4b4;font-size:12px;cursor:pointer">⎋ Sign out</a>
+    </div>
+  </aside>
+  <main>
+    <header class="top">
+      <div>
+        <h2 id="pageTitle">Dashboard</h2>
+        <div class="crumbs" id="pageCrumb">Overview of your laboratory</div>
+      </div>
+      <div class="row">
+        <input class="search" id="globalSearch" placeholder="Search patient / invoice / phone…" oninput="globalSearch(this.value)">
+        <button class="btn" onclick="openNewPatient()">+ New Patient</button>
+      </div>
+    </header>
+    <div class="content" id="view"></div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+/* ==========================================================
+   PathLab Pro — single-file pathology lab management software
+   Data is stored locally (localStorage) with JSON backup.
+   ========================================================== */
+
+const KEY='pathlab_pro_v3';
+const uid=()=>Math.random().toString(36).slice(2,10);
+const today=()=>new Date().toISOString().slice(0,10);
+const pad=n=>String(n).padStart(2,'0');
+const fmtDate=d=>{if(!d)return'';const x=new Date(d);return pad(x.getDate())+'-'+pad(x.getMonth()+1)+'-'+x.getFullYear();};
+const fmtDT=d=>{if(!d)return'';const x=new Date(d);return fmtDate(d)+' '+pad(x.getHours())+':'+pad(x.getMinutes());};
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtNum=v=>{if(v===''||v==null)return v;const n=parseFloat(v);if(isNaN(n))return v;return String(Math.round(n*1000)/1000);};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---------------- TEST CATALOG (seeded) ---------------- */
+const T=(code,name,cat,price,sample,params)=>({id:uid(),code,name,category:cat,price,sampleType:sample,tat:'Same day',parameters:params});
+const P=(name,unit,low,high)=>({name,unit,refLow:low,refHigh:high,type:'num'});
+const TX=(name,options)=>({name,unit:'',refText:options.join(' / '),type:'text'});
+
+function seedTests(){
+ return [
+  T('CBC','Complete Blood Count','Haematology',350,'EDTA Whole Blood',[
+   P('Hemoglobin','g/dL',12,16),P('Total WBC Count','/cmm',4000,11000),P('RBC Count','million/cmm',4.2,5.8),
+   P('Neutrophils','%',40,75),P('Lymphocytes','%',20,45),P('Eosinophils','%',1,6),P('Monocytes','%',2,10),
+   P('Basophils','%',0,1),P('Platelet Count','lakh/cmm',1.5,4.5),P('PCV / HCT','%',36,50),
+   P('MCV','fL',80,100),P('MCH','pg',27,32),P('MCHC','g/dL',32,36),P('RDW','%',11.5,14.5)]),
+  T('ESR','Erythrocyte Sedimentation Rate','Haematology',120,'EDTA Whole Blood',[P('ESR','mm/hr',0,20)]),
+  T('BG','Blood Group & Rh Typing','Haematology',150,'EDTA Whole Blood',[TX('Blood Group',['A','B','AB','O']),TX('Rh Factor',['Positive','Negative'])]),
+  T('PTINR','Prothrombin Time / INR','Haematology',400,'Citrate Plasma',[P('Prothrombin Time','sec',11,14),P('INR','ratio',0.8,1.2)]),
+  T('LFT','Liver Function Test','Biochemistry',650,'Serum',[
+   P('Total Bilirubin','mg/dL',0.3,1.2),P('Direct Bilirubin','mg/dL',0,0.3),P('Indirect Bilirubin','mg/dL',0.2,0.9),
+   P('SGOT (AST)','U/L',5,40),P('SGPT (ALT)','U/L',5,45),P('Alkaline Phosphatase','U/L',40,129),
+   P('Total Protein','g/dL',6.4,8.3),P('Albumin','g/dL',3.5,5.2),P('Globulin','g/dL',2,3.5),P('A/G Ratio','ratio',1.0,2.1)]),
+  T('KFT','Kidney Function Test','Biochemistry',650,'Serum',[
+   P('Urea','mg/dL',15,40),P('Creatinine','mg/dL',0.6,1.3),P('Uric Acid','mg/dL',3.5,7.2),
+   P('Sodium','mEq/L',135,145),P('Potassium','mEq/L',3.5,5.1),P('Chloride','mEq/L',98,107),P('Calcium','mg/dL',8.5,10.5)]),
+  T('LIPID','Lipid Profile','Biochemistry',550,'Serum',[
+   P('Total Cholesterol','mg/dL',125,200),P('Triglycerides','mg/dL',40,150),P('HDL Cholesterol','mg/dL',40,60),
+   P('LDL Cholesterol','mg/dL',60,130),P('VLDL Cholesterol','mg/dL',5,40),P('Chol / HDL Ratio','ratio',0,4.5)]),
+  T('FBS','Blood Sugar Fasting','Biochemistry',80,'Fluoride Plasma',[P('Glucose (Fasting)','mg/dL',70,100)]),
+  T('PPBS','Blood Sugar Post Prandial','Biochemistry',80,'Fluoride Plasma',[P('Glucose (PP)','mg/dL',70,140)]),
+  T('HBA1C','Glycated Haemoglobin HbA1c','Biochemistry',450,'EDTA Whole Blood',[P('HbA1c','%',4,5.6)]),
+  T('TFT','Thyroid Profile (T3 T4 TSH)','Biochemistry',700,'Serum',[
+   P('T3 (Triiodothyronine)','ng/mL',0.8,2.0),P('T4 (Thyroxine)','µg/dL',5.1,14.1),P('TSH','µIU/mL',0.27,4.2)]),
+  T('URINE','Urine Routine & Microscopy','Clinical Pathology',200,'Midstream Urine',[
+   TX('Colour',['Pale Yellow','Yellow','Dark Yellow','Amber','Red']),TX('Appearance',['Clear','Slightly Turbid','Turbid']),
+   P('pH','pH',4.6,8.0),P('Specific Gravity','g/mL',1.005,1.030),
+   TX('Protein',['Absent','Trace','1+','2+','3+']),TX('Glucose',['Absent','Trace','1+','2+','3+']),
+   TX('Ketone Bodies',['Absent','Present']),TX('Blood',['Absent','Trace','Present']),TX('Bilirubin',['Absent','Present']),
+   TX('Nitrite',['Negative','Positive']),TXN('Pus Cells','/hpf'),TXN('RBCs','/hpf'),TXN('Epithelial Cells','/hpf'),
+   TX('Casts',['Absent','Hyaline','Granular']),TX('Crystals',['Absent','Calcium Oxalate','Uric Acid','Triple Phosphate'])]),
+  T('CRP','C-Reactive Protein (Quantitative)','Immunology',500,'Serum',[P('CRP','mg/L',0,6)]),
+  T('DENGUE','Dengue Profile (NS1 IgM IgG)','Serology',900,'Serum',[TX('NS1 Antigen',['Negative','Positive']),TX('IgM',['Negative','Positive']),TX('IgG',['Negative','Positive'])]),
+  T('WIDAL','Widal Test','Serology',300,'Serum',[TX('S. typhi O',['1:40','1:80','1:160','1:320']),TX('S. typhi H',['1:40','1:80','1:160','1:320']),TX('S. paratyphi AH',['1:40','1:80','1:160','1:320']),TX('S. paratyphi BH',['1:40','1:80','1:160','1:320'])]),
+  T('VDRL','VDRL / RPR Test','Serology',200,'Serum',[TX('VDRL',['Non Reactive','Reactive'])]),
+  T('HBSAG','HBsAg Screening','Serology',350,'Serum',[TX('HBsAg',['Non Reactive','Reactive'])]),
+  T('HIV','HIV 1 & 2 Antibody Screening','Serology',400,'Serum',[TX('HIV I & II',['Non Reactive','Reactive'])]),
+  T('TROP','Troponin-I','Biochemistry',900,'Serum',[P('Troponin-I','ng/mL',0,0.04)]),
+  T('SAMP','Semen Analysis','Clinical Pathology',400,'Semen',[
+   P('Volume','mL',1.5,5),P('Sperm Count','million/mL',15,150),P('Total Motility','%',40,100),P('Normal Forms','%',4,100)]),
+  T('STOOL','Stool Routine Examination','Clinical Pathology',180,'Stool',[
+   TX('Colour',['Brown','Yellow','Green','Black']),TX('Consistency',['Formed','Semi-formed','Loose','Watery']),
+   TX('Occult Blood',['Negative','Positive']),TXN('Ova / Cysts','/hpf'),TXN('Pus Cells','/hpf')])
+ ];
+}
+const TXN=(name,unit)=>({name,unit,refText:'Nil / Not seen',type:'text'});
+
+/* ---------------- DEFAULT STATE ---------------- */
+function defaultState(){
+ const tests=seedTests();
+ return {
+  settings:{
+   labName:'Muskan Diagnostic', tagline:'Pathology & Diagnostic Centre',
+   address:'Main Road, Civil Lines', city:'', phone:'+91 00000 00000', email:'info@muskanlab.in',
+   website:'www.muskanlab.in', gstin:'', gstDefault:0, currency:'₹',
+   pathologist1:'Dr. A. Sharma', pathologist1Q:'MD (Pathology)',
+   pathologist2:'Dr. R. Verma', pathologist2Q:'MD (Biochemistry)',
+   technician:'Mr. S. Khan', showBarcode:true, showQR:true, upiId:'', logo:'', regNo:'',
+   whatsapp:'+91 00000 00000',
+   support:{name:'PathLab Support',phone:'+91 00000 00000',email:'support@muskanlab.in'},
+   cloud:{url:'',key:''}
+  },
+  users:[
+   {id:uid(),username:'admin',password:'admin123',name:'Administrator',role:'admin'},
+   {id:uid(),username:'reception',password:'recep123',name:'Reception Desk',role:'receptionist'},
+   {id:uid(),username:'lab',password:'lab123',name:'Lab Technician',role:'technician'},
+   {id:uid(),username:'doctor',password:'doc123',name:'Dr. A. Sharma',role:'pathologist'},
+   {id:uid(),username:'accounts',password:'acct123',name:'Accounts',role:'accountant'}
+  ],
+  doctors:[
+   {id:uid(),name:'Dr. S. Mehta',qualification:'MBBS, MD',speciality:'General Physician',commissionPct:10,phone:''},
+   {id:uid(),name:'Dr. P. Nair',qualification:'MBBS, DNB',speciality:'Physician',commissionPct:8,phone:''},
+   {id:uid(),name:'Self / Walk-in',qualification:'',speciality:'',commissionPct:0,phone:''}
+  ],
+  tests, patients:[], invoices:[], bookings:[],
+  counters:{mrn:1,inv:1,bk:1}, qrCache:{}
+ };
+}
+let S=load();
+function load(){ try{const r=localStorage.getItem(KEY); if(r){const s=JSON.parse(r); if(s&&s.tests&&s.tests.length) return s; }}catch(e){} const s=defaultState(); try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){} return s; }
+function save(n){ S=n||S; try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('Storage full — export a backup');} }
+let ME=null, VIEW='dashboard';
+
+/* ---------------- AUTH ---------------- */
+function doLogin(){
+ const u=document.getElementById('lgUser').value.trim(), p=document.getElementById('lgPass').value;
+ const user=S.users.find(x=>x.username===u&&x.password===p);
+ if(!user){document.getElementById('lgErr').textContent='Invalid username or password';return;}
+ ME=user; sessionStorage.setItem('pl_user',user.id);
+ document.getElementById('login').classList.add('hidden');
+ document.getElementById('app').classList.remove('hidden');
+ paintChrome(); go('dashboard');
+ toast('Welcome, '+user.name);
+}
+function doLogout(){ ME=null; sessionStorage.removeItem('pl_user'); document.getElementById('app').classList.add('hidden'); document.getElementById('login').classList.remove('hidden'); document.getElementById('lgPass').value=''; }
+function restoreSession(){ const id=sessionStorage.getItem('pl_user'); if(id){const u=S.users.find(x=>x.id===id); if(u){ME=u;document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');paintChrome();go('dashboard');}} }
+function paintChrome(){
+ const st=S.settings;
+ document.getElementById('sideLab').textContent=st.labName;
+ document.getElementById('sideTag').textContent=st.tagline||'';
+ const _mk=st.logo?`<img src="${st.logo}" alt="logo" style="width:100%;height:100%;object-fit:contain">`:esc(initials(st.labName));
+ document.getElementById('sideLogo').innerHTML=_mk;
+ document.getElementById('loginLogo').innerHTML=_mk;
+ document.getElementById('loginLab').textContent=st.labName;
+ document.getElementById('loginSupport').textContent='Support: '+st.support.name+' · '+(st.support.phone||'');
+ document.getElementById('meName').textContent=ME.name;
+ document.getElementById('meRole').textContent=ME.role;
+ document.getElementById('meAv').textContent=initials(ME.name);
+ buildNav();
+}
+const navItems=[['dashboard','Dashboard','▦'],['patients','Patients','👤'],['billing','Billing & Invoices','🧾'],['samples','Sample Collection','🧪'],['results','Result Entry','✎'],['reports','Reports','📄'],['bookings','Online Bookings','🌐'],['analytics','Analytics','📈'],['tests','Test Catalog','⚗'],['doctors','Referring Doctors','🩺'],['settings','Settings','⚙'],['backup','Backup & Data','💾']];
+function canSee(v){ const r=ME.role;
+ if(r==='admin') return true;
+ if(r==='receptionist') return ['dashboard','patients','billing','bookings','samples'].includes(v);
+ if(r==='technician') return ['dashboard','samples','results','tests'].includes(v);
+ if(r==='pathologist') return ['dashboard','results','reports','patients','analytics'].includes(v);
+ if(r==='accountant') return ['dashboard','billing','reports','analytics','doctors'].includes(v);
+ return false;
+}
+function buildNav(){
+ const n=document.getElementById('nav'); n.innerHTML='';
+ navItems.filter(([v])=>canSee(v)).forEach(([v,t,ic])=>{
+  const a=document.createElement('a'); a.className=(VIEW===v?'active':''); a.innerHTML='<span class="ic">'+ic+'</span>'+t;
+  a.onclick=()=>go(v); n.appendChild(a);
+ });
+}
+function go(v){
+ if(!canSee(v)){toast('No access to that module');return;}
+ VIEW=v; buildNav();
+ const titles={dashboard:['Dashboard','Overview of your laboratory'],patients:['Patients','Patient records & registration'],billing:['Billing & Invoices','Create bills, collect payments, print invoices'],samples:['Sample Collection','Collect samples, assign barcodes, track status'],results:['Result Entry','Enter values — auto flagged against reference ranges'],reports:['Reports','Verified & printable laboratory reports'],bookings:['Online Bookings','Patient bookings received from the website'],analytics:['Analytics','Revenue, test volume and doctor commission'],tests:['Test Catalog','Master list of tests, prices and reference ranges'],doctors:['Referring Doctors','Doctors and commission rates'],settings:['Settings','Lab profile, users and preferences'],backup:['Backup & Data','Export / import / reset all data']};
+ document.getElementById('pageTitle').textContent=titles[v][0];
+ document.getElementById('pageCrumb').textContent=titles[v][1];
+ render();
+}
+function render(){ const el=document.getElementById('view');
+ el.innerHTML=({dashboard:vDashboard,patients:vPatients,billing:vBilling,samples:vSamples,results:vResults,reports:vReports,bookings:vBookings,analytics:vAnalytics,tests:vTests,doctors:vDoctors,settings:vSettings,backup:vBackup}[VIEW])();
+}
+function initials(s){ return (s||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+/* ---------------- HELPERS ---------------- */
+const patientById=id=>S.patients.find(p=>p.id===id)||{name:'—'};
+const doctorById=id=>S.doctors.find(d=>d.id===id)||{name:'—',commissionPct:0};
+const testById=id=>S.tests.find(t=>t.id===id);
+function invTotal(inv){ return inv.items.reduce((a,i)=>a+i.price,0); }
+function invComputed(inv){
+ const sub=invTotal(inv); const disc=+(inv.discount||0); const taxable=Math.max(0,sub-disc);
+ const gstPct=+(inv.gstPct||0); const gst=taxable*gstPct/100; const total=taxable+gst;
+ const paid=+(inv.paid||0); return {sub,disc,taxable,gst,total,paid,due:total-paid};
+}
+function flag(p,v){
+ if(p.type!=='num'||v===''||v==null) return '';
+ const n=parseFloat(v); if(isNaN(n)) return '';
+ const lo=parseFloat(p.refLow), hi=parseFloat(p.refHigh);
+ if(!isNaN(lo)&&n<lo) return 'L';
+ if(!isNaN(hi)&&n>hi) return 'H';
+ return 'N';
+}
+function resultsFor(invId){ return S.invoices.find(i=>i.id===invId)?.results||{}; }
+function statusOf(inv){ const r=inv.results||{}; const ids=Object.keys(r);
+ if(!ids.length) return 'Pending';
+ const st=ids.map(k=>r[k].status);
+ if(st.every(x=>x==='Printed')) return 'Printed';
+ if(st.every(x=>x==='Verified'||x==='Printed')) return 'Verified';
+ if(st.some(x=>x==='Verified'||x==='Printed')) return 'Partial';
+ return 'Draft';
+}
+function pillFor(s){ const m={'Paid':'p-green','Partial':'p-amber','Unpaid':'p-red','Verified':'p-blue','Printed':'p-green','Draft':'p-grey','Pending':'p-amber','Partial ':'p-amber','Collected':'p-blue','Reported':'p-green','Collected / Reported':'p-green'}; return '<span class="pill '+(m[s]||'p-grey')+'">'+esc(s)+'</span>'; }
+
+/* ---------------- MODAL ---------------- */
+function modal(title,bodyHtml,footerHtml,wide){
+ const root=document.getElementById('modalRoot');
+ root.innerHTML='<div class="modal" onclick="if(event.target===this)closeModal()"><div class="box" style="'+(wide?'max-width:1000px':'')+'"><div class="hd"><h3 style="margin:0;font-size:16px">'+esc(title)+'</h3><button class="x" onclick="closeModal()">✕</button></div><div class="bd">'+bodyHtml+'</div>'+(footerHtml?'<div class="ft">'+footerHtml+'</div>':'')+'</div></div>';
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+
+/* ---------------- DASHBOARD ---------------- */
+function vDashboard(){
+ const invs=S.invoices, t=today();
+ const todayInv=invs.filter(i=>i.createdAt.slice(0,10)===t);
+ const revToday=todayInv.reduce((a,i)=>a+invComputed(i).total,0);
+ const dueAll=invs.reduce((a,i)=>a+invComputed(i).due,0);
+ const pending=invs.filter(i=>['Draft','Pending','Partial'].includes(statusOf(i))).length;
+ const totalRev=invs.reduce((a,i)=>a+invComputed(i).total,0);
+ const collected=invs.reduce((a,i)=>a+invComputed(i).paid,0);
+ const cnt={}; invs.forEach(i=>i.items.forEach(it=>cnt[it.name]=(cnt[it.name]||0)+1));
+ const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,6);
+ const maxTop=Math.max(1,...top.map(x=>x[1]));
+ const last7=[]; for(let d=6;d>=0;d--){ const dt=new Date(); dt.setDate(dt.getDate()-d); const k=dt.toISOString().slice(0,10);
+  const sum=invs.filter(i=>i.createdAt.slice(0,10)===k).reduce((a,i)=>a+invComputed(i).total,0);
+  last7.push({k,label:pad(dt.getDate())+'/'+pad(dt.getMonth()+1),sum}); }
+ const max7=Math.max(1,...last7.map(x=>x.sum));
+ const recent=[...invs].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+ return `
+ <div class="grid g4" style="margin-bottom:14px">
+   ${kpi('Today\'s Revenue',money(revToday),(todayInv.length)+' invoice(s) today')}
+   ${kpi('Total Revenue',money(totalRev),'Collected '+money(collected))}
+   ${kpi('Outstanding Dues',money(dueAll),'Across '+invs.length+' invoices')}
+   ${kpi('Reports Pending',pending,'Awaiting verification/print')}
+ </div>
+ <div class="grid g3" style="margin-bottom:14px">
+   ${kpi('Patients Registered',S.patients.length,'Total records')}
+   ${kpi('Online Bookings',S.bookings.length,S.bookings.filter(b=>b.status==='New').length+' new')}
+   ${kpi('Tests in Catalog',S.tests.length,'Active tests')}
+ </div>
+ <div class="split" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+   <div class="card"><div class="hd"><h3>Revenue — last 7 days</h3><span class="tag">Total ${money(last7.reduce((a,x)=>a+x.sum,0))}</span></div>
+     <div class="bd">${bars(last7.map(x=>({label:x.label,v:x.sum,m:v=>money(v),max:max7})))}</div></div>
+   <div class="card"><div class="hd"><h3>Top Tests by Volume</h3><span class="tag">All time</span></div>
+     <div class="bd">${top.length?top.map(([n,c])=>`<div style="margin-bottom:10px"><div class="row"><span style="font-size:13px">${esc(n)}</span><span class="spacer"></span><b>${c}</b></div><div class="bar"><i style="width:${(c/maxTop*100).toFixed(0)}%"></i></div></div>`).join(''):'<div class="empty">No data yet</div>'}</div></div>
+ </div>
+ <div class="card"><div class="hd"><h3>Recent Invoices</h3><button class="btn sm ghost" onclick="go('billing')">Open billing</button></div>
+  <div class="tblWrap"><table><thead><tr><th>Invoice</th><th>Patient</th><th>Tests</th><th>Total</th><th>Paid</th><th>Status</th><th>Report</th></tr></thead><tbody>
+  ${recent.length?recent.map(i=>{const c=invComputed(i);const p=patientById(i.patientId);return `<tr><td><b>${esc(i.no)}</b><div class="tag">${fmtDate(i.createdAt)}</div></td><td>${esc(p.name)}<div class="tag">${esc(p.mrn||'')}</div></td><td>${i.items.length}</td><td>${money(c.total)}</td><td>${money(c.paid)}</td><td>${pillFor(c.due<=0?'Paid':(c.paid>0?'Partial':'Unpaid'))}</td><td>${pillFor(statusOf(i))}</td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">No invoices yet — create your first bill</td></tr>'}
+  </tbody></table></div></div>`;
+}
+function kpi(l,v,d){ return `<div class="card kpi"><div class="lab">${l}</div><div class="val">${v}</div><div class="delta">${esc(d)}</div></div>`; }
+function bars(data){
+ const h=170,w=Math.max(320,data.length*62),max=Math.max(1,...data.map(d=>d.max||d.v));
+ const bw=Math.min(46,(w/data.length)-16);
+ return `<svg viewBox="0 0 ${w} ${h+34}" style="width:100%;height:200px">
+ ${[0,.25,.5,.75,1].map(f=>{const y=10+(h-30)*(1-f); return `<line x1="0" x2="${w}" y1="${y}" y2="${y}" stroke="#eef1f6"/>`;}).join('')}
+ ${data.map((d,i)=>{const bh=Math.max(2,(d.v/max)*(h-40)); const x=i*(w/data.length)+((w/data.length)-bw)/2; const y=h-20-bh;
+  return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="url(#g1)"/>
+  <text x="${x+bw/2}" y="${y-5}" text-anchor="middle" font-size="10" fill="#6b7a90">${d.v?(d.m?d.m(d.v):d.v):''}</text>
+  <text x="${x+bw/2}" y="${h+2}" text-anchor="middle" font-size="10" fill="#6b7a90">${esc(d.label)}</text>`;}).join('')}
+ <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16a3c9"/><stop offset="1" stop-color="#0f6fde"/></linearGradient></defs>
+ </svg>`;
+}
+
+/* ---------------- PATIENTS ---------------- */
+let pQuery='';
+function vPatients(){
+ const list=S.patients.filter(p=>!pQuery||[p.name,p.mrn,p.phone].join(' ').toLowerCase().includes(pQuery.toLowerCase())).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ return `<div class="toolbar">
+   <input class="search" placeholder="Search name / MRN / phone" value="${esc(pQuery)}" oninput="pQuery=this.value;render()">
+   <span class="spacer"></span><button class="btn" onclick="openNewPatient()">+ New Patient</button></div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>MRN</th><th>Name</th><th>Age/Sex</th><th>Phone</th><th>Referred By</th><th>Registered</th><th>Actions</th></tr></thead><tbody>
+ ${list.length?list.map(p=>`<tr>
+  <td><b>${esc(p.mrn)}</b></td><td>${esc(p.name)}<div class="tag">${esc(p.address||'')}</div></td>
+  <td>${esc(p.age||'')} / ${esc(p.sex||'')}</td><td>${esc(p.phone||'')}</td><td>${esc(doctorById(p.doctorId).name)}</td>
+  <td>${fmtDate(p.createdAt)}</td>
+  <td class="row"><button class="btn sm ghost" onclick="openNewBill('${p.id}')">Bill</button><button class="btn sm ghost" onclick="editPatient('${p.id}')">Edit</button><button class="btn sm ghost" onclick="patientHistory('${p.id}')">History</button></td></tr>`).join(''):'<tr><td colspan="7" class="empty">No patients yet</td></tr>'}
+ </tbody></table></div></div>`;
+}
+function patientForm(p){
+ p=p||{};
+ const docOpts=S.doctors.map(d=>`<option value="${d.id}" ${p.doctorId===d.id?'selected':''}>${esc(d.name)}</option>`).join('');
+ return `<div class="grid g2">
+  <div class="field"><label>Full Name *</label><input id="pfName" value="${esc(p.name||'')}"></div>
+  <div class="field"><label>Phone</label><input id="pfPhone" value="${esc(p.phone||'')}"></div>
+  <div class="field"><label>Age</label><input id="pfAge" value="${esc(p.age||'')}" placeholder="e.g. 42 or 6M"></div>
+  <div class="field"><label>Sex</label><select id="pfSex">${['Male','Female','Other'].map(s=>`<option ${p.sex===s?'selected':''}>${s}</option>`).join('')}</select></div>
+  <div class="field"><label>Referred Doctor</label><select id="pfDoc">${docOpts}</select></div>
+  <div class="field"><label>Email</label><input id="pfEmail" value="${esc(p.email||'')}"></div>
+ </div>
+ <div class="field"><label>Address</label><textarea id="pfAddr" rows="2">${esc(p.address||'')}</textarea></div>`;
+}
+function openNewPatient(){ modal('Register New Patient',patientForm(),'<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePatient()">Save Patient</button>'); }
+function editPatient(id){ const p=S.patients.find(x=>x.id===id); modal('Edit Patient — '+p.mrn,patientForm(p),`<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePatient('${id}')">Update</button>`); }
+function savePatient(id){
+ const name=document.getElementById('pfName').value.trim();
+ if(!name){toast('Name is required');return;}
+ const data={name,phone:document.getElementById('pfPhone').value.trim(),age:document.getElementById('pfAge').value.trim(),sex:document.getElementById('pfSex').value,doctorId:document.getElementById('pfDoc').value,email:document.getElementById('pfEmail').value.trim(),address:document.getElementById('pfAddr').value.trim()};
+ if(id){ Object.assign(S.patients.find(x=>x.id===id),data); }
+ else{
+  const mrn='MD-'+String(S.counters.mrn++).padStart(4,'0');
+  S.patients.push(Object.assign({id:uid(),mrn,createdAt:new Date().toISOString()},data));
+ }
+ save(); closeModal(); render(); toast('Patient saved');
+}
+function patientHistory(id){
+ const p=patientById(id); const invs=S.invoices.filter(i=>i.patientId===id).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ modal('Patient History — '+p.name,`<div class="note" style="margin-bottom:12px">${esc(p.mrn)} · ${esc(p.age||'')}/${esc(p.sex||'')} · ${esc(p.phone||'')} · Dr. ${esc(doctorById(p.doctorId).name)}</div>
+ ${invs.length?'<table><thead><tr><th>Date</th><th>Invoice</th><th>Tests</th><th>Total</th><th>Report</th></tr></thead><tbody>'+invs.map(i=>`<tr><td>${fmtDate(i.createdAt)}</td><td>${esc(i.no)}</td><td>${i.items.map(x=>esc(x.name)).join(', ')}</td><td>${money(invComputed(i).total)}</td><td>${pillFor(statusOf(i))}</td></tr>`).join('')+'</tbody></table>':'<div class="empty">No visits recorded</div>'}`);
+}
+
+/* ---------------- BILLING ---------------- */
+let billPatient=null, billItems=[], billQ='';
+function vBilling(){
+ const invs=[...S.invoices].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ return `<div class="toolbar"><button class="btn" onclick="openNewBill()">+ New Invoice</button>
+  <span class="spacer"></span></div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>Invoice #</th><th>Date</th><th>Patient</th><th>Tests</th><th>Subtotal</th><th>GST</th><th>Total</th><th>Paid</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+ ${invs.length?invs.map(i=>{const c=invComputed(i);const p=patientById(i.patientId);
+  return `<tr><td><b>${esc(i.no)}</b></td><td>${fmtDate(i.createdAt)}</td><td>${esc(p.name)}<div class="tag">${esc(p.mrn||'')}</div></td>
+  <td>${i.items.length}</td><td>${money(c.sub)}</td><td>${money(c.gst)}</td><td><b>${money(c.total)}</b></td><td>${money(c.paid)}</td>
+  <td>${c.due>0?'<span style="color:#d63b3b;font-weight:700">'+money(c.due)+'</span>':money(0)}</td>
+  <td>${pillFor(c.due<=0?'Paid':(c.paid>0?'Partial':'Unpaid'))}</td>
+  <td class="row"><button class="btn sm ghost" onclick="viewInvoice('${i.id}')">View</button><button class="btn sm ghost" onclick="payInvoice('${i.id}')">Pay</button><button class="btn sm bad" onclick="delInvoice('${i.id}')">Delete</button></td></tr>`;}).join(''):'<tr><td colspan="11" class="empty">No invoices yet</td></tr>'}
+ </tbody></table></div></div>`;
+}
+function openNewBill(patientId){
+ billPatient=patientId?S.patients.find(p=>p.id===patientId):null; billItems=[]; billQ='';
+ modal('Create Invoice',billModalHtml(),'<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveInvoice()">Create Invoice</button>',true);
+}
+function billModalHtml(){
+ const docs=S.doctors.map(d=>`<option value="${d.id}" ${billPatient&&billPatient.doctorId===d.id?'selected':''}>${esc(d.name)}</option>`).join('');
+ const pats=S.patients.map(p=>`<option value="${p.id}" ${billPatient&&billPatient.id===p.id?'selected':''}>${esc(p.mrn)} — ${esc(p.name)}</option>`).join('');
+ const list=S.tests.filter(t=>!billQ||[t.name,t.code,t.category].join(' ').toLowerCase().includes(billQ.toLowerCase()));
+ const sub=billItems.reduce((a,i)=>a+i.price,0);
+ return `<div class="grid g3">
+   <div class="field"><label>Patient</label><select id="bPatient" onchange="billPatient=S.patients.find(p=>p.id===this.value)"><option value="">— select —</option>${pats}</select></div>
+   <div class="field"><label>Referring Doctor</label><select id="bDoc">${docs}</select></div>
+   <div class="field"><label>GST %</label><select id="bGst">${[0,5,12,18].map(g=>`<option value="${g}" ${S.settings.gstDefault==g?'selected':''}>${g}%</option>`).join('')}</select></div>
+ </div>
+ <div class="split" style="margin-top:6px">
+  <div>
+   <input class="search" style="width:100%;margin-bottom:8px" placeholder="Search tests…" value="${esc(billQ)}" oninput="billQ=this.value;refreshBill()">
+   <div class="pickList">${list.map(t=>`<div class="it" onclick="addTest('${t.id}')"><div style="flex:1"><b style="font-size:13px">${esc(t.name)}</b><small>${esc(t.category)} · ${money(t.price)}</small></div><span style="color:#0f6fde;font-weight:700">+</span></div>`).join('')||'<div class="empty">No tests match</div>'}</div>
+  </div>
+  <div>
+   <div style="font-weight:700;margin-bottom:8px">Selected Tests</div>
+   <div id="bSelected">${selectedHtml()}</div>
+  </div>
+ </div>
+ <div class="grid g3" style="margin-top:14px">
+  <div class="field"><label>Discount (₹)</label><input id="bDisc" type="number" value="0" oninput="refreshBill()"></div>
+  <div class="field"><label>Paid Now (₹)</label><input id="bPaid" type="number" value="0"></div>
+  <div class="field"><label>Payment Mode</label><select id="bMode">${['Cash','UPI','Card','Net Banking','Insurance'].map(m=>`<option>${m}</option>`).join('')}</select></div>
+ </div>
+ <div id="bTotals" style="margin-top:6px">${totalsHtml()}</div>`;
+}
+function selectedHtml(){
+ if(!billItems.length) return '<div class="empty">No tests selected</div>';
+ return '<div class="pickList" style="max-height:220px">'+billItems.map((it,i)=>`<div class="it"><div style="flex:1"><b style="font-size:13px">${esc(it.name)}</b></div><span>${money(it.price)}</span><button class="x" style="font-size:14px" onclick="billItems.splice(${i},1);refreshBill()">✕</button></div>`).join('')+'</div>';
+}
+function totalsHtml(){
+ const disc=+(document.getElementById('bDisc')?.value||0), gst=+(document.getElementById('bGst')?.value||0);
+ const sub=billItems.reduce((a,i)=>a+i.price,0), tax=Math.max(0,sub-disc), g=tax*gst/100;
+ return `<div class="note"><div class="row"><span>Subtotal</span><span class="spacer"></span><b>${money(sub)}</b></div>
+ <div class="row"><span>Discount</span><span class="spacer"></span><b>- ${money(disc)}</b></div>
+ <div class="row"><span>GST @ ${gst}%</span><span class="spacer"></span><b>${money(g)}</b></div>
+ <div class="row" style="border-top:1px solid #d8e6fb;margin-top:6px;padding-top:6px"><span>Grand Total</span><span class="spacer"></span><b style="font-size:17px">${money(tax+g)}</b></div></div>`;
+}
+function addTest(id){ const t=testById(id); if(!t)return; billItems.push({testId:t.id,name:t.name,price:t.price}); refreshBill(); }
+function refreshBill(){ const s=document.getElementById('bSelected'); if(s)s.innerHTML=selectedHtml(); const tt=document.getElementById('bTotals'); if(tt)tt.innerHTML=totalsHtml(); }
+function saveInvoice(){
+ const pid=document.getElementById('bPatient').value;
+ if(!pid){toast('Select a patient');return;}
+ if(!billItems.length){toast('Add at least one test');return;}
+ const inv={ id:uid(), no:'INV-'+new Date().getFullYear()+String(S.counters.inv++).padStart(4,'0'),
+  patientId:pid, doctorId:document.getElementById('bDoc').value, items:billItems.map(x=>({...x})),
+  discount:+document.getElementById('bDisc').value||0, gstPct:+document.getElementById('bGst').value||0,
+  paid:+document.getElementById('bPaid').value||0, paymentMode:document.getElementById('bMode').value,
+  createdAt:new Date().toISOString(), results:{} };
+ S.invoices.push(inv); save(); closeModal(); render(); toast('Invoice '+inv.no+' created');
+}
+function viewInvoice(id){
+ const i=S.invoices.find(x=>x.id===id), p=patientById(i.patientId), c=invComputed(i), d=doctorById(i.doctorId);
+ modal('Invoice '+i.no,`<div class="grid g2" style="margin-bottom:12px">
+  <div class="note"><b>Patient</b><br>${esc(p.name)} · ${esc(p.mrn||'')}<br>${esc(p.phone||'')}<br>${esc(p.age||'')}/${esc(p.sex||'')}</div>
+  <div class="note"><b>Referred By</b><br>${esc(d.name)}<br>Commission ${d.commissionPct}% = ${money(c.taxable*d.commissionPct/100)}<br>${fmtDT(i.createdAt)}</div></div>
+ <table><thead><tr><th>#</th><th>Test</th><th>Price</th></tr></thead><tbody>${i.items.map((x,n)=>`<tr><td>${n+1}</td><td>${esc(x.name)}</td><td>${money(x.price)}</td></tr>`).join('')}</tbody></table>
+ <div class="note" style="margin-top:12px"><div class="row"><span>Subtotal</span><span class="spacer"></span><b>${money(c.sub)}</b></div>
+ <div class="row"><span>Discount</span><span class="spacer"></span><b>${money(c.disc)}</b></div>
+ <div class="row"><span>GST @ ${i.gstPct}%</span><span class="spacer"></span><b>${money(c.gst)}</b></div>
+ <div class="row"><span>Total</span><span class="spacer"></span><b>${money(c.total)}</b></div>
+ <div class="row"><span>Paid (${esc(i.paymentMode)})</span><span class="spacer"></span><b>${money(c.paid)}</b></div>
+ <div class="row"><span>Due</span><span class="spacer"></span><b>${money(c.due)}</b></div></div>`,
+ `<button class="btn" onclick="payQRModal('${id}')">💳 Payment QR</button><button class="btn ghost" onclick="printInvoice('${id}')">🖨 Print Invoice</button><button class="btn ghost" onclick="closeModal()">Close</button>`);
+}
+function payInvoice(id){
+ const i=S.invoices.find(x=>x.id===id), c=invComputed(i);
+ modal('Collect Payment — '+i.no,`<div class="note" style="margin-bottom:12px">Total ${money(c.total)} · Already paid ${money(c.paid)} · Due ${money(c.due)}</div>
+ <div class="grid g2"><div class="field"><label>Amount (₹)</label><input id="payAmt" type="number" value="${c.due.toFixed(2)}"></div>
+ <div class="field"><label>Mode</label><select id="payMode">${['Cash','UPI','Card','Net Banking','Insurance'].map(m=>`<option ${i.paymentMode===m?'selected':''}>${m}</option>`).join('')}</select></div></div>`,
+ `<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn ok" onclick="applyPay('${id}')">Record Payment</button>`);
+}
+function applyPay(id){ const i=S.invoices.find(x=>x.id===id); i.paid=+(i.paid||0)+(+document.getElementById('payAmt').value||0); i.paymentMode=document.getElementById('payMode').value; save(); closeModal(); render(); toast('Payment recorded'); }
+function delInvoice(id){ const i=S.invoices.find(x=>x.id===id); if(!i)return; if(!confirm('Delete invoice '+i.no+'? This cannot be undone.'))return; S.invoices=S.invoices.filter(x=>x.id!==id); save(); render(); toast('Invoice deleted'); }
+
+/* ---------------- SAMPLES ---------------- */
+function barcodeSVG(text){
+ try{ if(window.JsBarcode){ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); JsBarcode(svg,text,{format:'CODE128',displayValue:true,height:46,width:1.6,fontSize:12,margin:2}); return svg.outerHTML; } }catch(e){}
+ let x=0,bars=''; for(let i=0;i<text.length;i++){const c=text.charCodeAt(i); for(let b=0;b<4;b++){const w=((c>>(b*2))&3)+1; bars+=`<rect x="${x}" y="0" width="${w}" height="46" fill="#12203a"/>`; x+=w+2;}}
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${x+10} 68" style="width:260px;height:68px">${bars}<text x="${(x+10)/2}" y="62" text-anchor="middle" font-size="12" font-family="monospace" fill="#12203a">${esc(text)}</text></svg>`;
+}
+function vSamples(){
+ const invs=S.invoices.filter(i=>i.items.length).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ return `<div class="note" style="margin-bottom:14px">Track sample collection. Print a barcode label for each invoice and mark samples as collected before result entry.</div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>Invoice</th><th>Patient</th><th>Tests / Sample Types</th><th>Collected</th><th>Actions</th></tr></thead><tbody>
+ ${invs.length?invs.map(i=>{const p=patientById(i.patientId); const types=[...new Set(i.items.map(x=>testById(x.testId)?.sampleType||'—'))];
+  return `<tr><td><b>${esc(i.no)}</b><div class="tag">${fmtDate(i.createdAt)}</div></td><td>${esc(p.name)}<div class="tag">${esc(p.mrn||'')}</div></td>
+  <td>${types.map(t=>`<span class="chip">${esc(t)}</span>`).join(' ')}</td>
+  <td>${i.collectedAt?'<span class="pill p-green">Collected '+fmtDT(i.collectedAt)+'</span>':'<span class="pill p-amber">Pending</span>'}</td>
+  <td class="row">${!i.collectedAt?`<button class="btn sm ok" onclick="markCollected('${i.id}')">Mark Collected</button>`:''}<button class="btn sm ghost" onclick="printLabel('${i.id}')">🖨 Barcode Label</button></td></tr>`;}).join(''):'<tr><td colspan="5" class="empty">No samples — create an invoice first</td></tr>'}
+ </tbody></table></div></div>`;
+}
+function markCollected(id){ const i=S.invoices.find(x=>x.id===id); i.collectedAt=new Date().toISOString(); save(); render(); toast('Sample marked collected'); }
+function printLabel(id){
+ const i=S.invoices.find(x=>x.id===id), p=patientById(i.patientId), st=S.settings;
+ const bar=barcodeSVG(i.no);
+ openPrint(st.labName+' — Sample Label',`${[1,2].map(()=>`<div style="border:1px dashed #999;border-radius:8px;padding:12px 14px;margin-bottom:10px;font-family:Arial">
+  <div style="font-size:15px;font-weight:800">${esc(st.labName)}</div>
+  <div style="font-size:11px;color:#555">${esc(st.address)} · ${esc(st.phone)}</div>
+  <div style="margin:6px 0">${bar}</div>
+  <div style="font-size:13px"><b>${esc(p.name)}</b> · ${esc(p.age||'')}/${esc(p.sex||'')} · ${esc(p.mrn||'')}</div>
+  <div style="font-size:12px;color:#333;margin-top:4px">${i.items.map(x=>esc(x.name)).join(', ')}</div>
+  <div style="font-size:11px;color:#666;margin-top:6px">Collected: ${fmtDT(new Date().toISOString())}</div></div>`).join('')}`);
+}
+
+/* ---------------- RESULT ENTRY ---------------- */
+function vResults(){
+ const invs=S.invoices.filter(i=>i.items.length).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ return `<div class="note" style="margin-bottom:14px">Enter values for each parameter. Values outside the reference range are automatically flagged <b style="color:#c92a2a">H</b> / <b style="color:#0a56ad">L</b>. Reports must be <b>Verified</b> by a pathologist before printing.</div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>Invoice</th><th>Patient</th><th>Tests</th><th>Result Status</th><th>Report</th><th>Actions</th></tr></thead><tbody>
+ ${invs.length?invs.map(i=>`<tr><td><b>${esc(i.no)}</b><div class="tag">${fmtDate(i.createdAt)}</div></td>
+  <td>${esc(patientById(i.patientId).name)}<div class="tag">${esc(patientById(i.patientId).mrn||'')}</div></td>
+  <td>${i.items.map(x=>esc(x.name)).join(', ')}</td><td>${pillFor(statusOf(i))}</td><td>${i.results?Object.keys(i.results).length:0} / ${i.items.length} entered</td>
+  <td class="row"><button class="btn sm" onclick="openResult('${i.id}')">Enter Results</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No invoices yet</td></tr>'}
+ </tbody></table></div></div>`;
+}
+function openResult(invId){
+ const i=S.invoices.find(x=>x.id===invId); const p=patientById(i.patientId);
+ i.results=i.results||{};
+ const body=i.items.map(it=>{
+  const t=testById(it.testId); if(!t) return '';
+  const r=i.results[it.testId]||{values:{},remarks:'',status:'Draft',verifiedBy:'',verifiedAt:'',printedAt:''};
+  i.results[it.testId]=r;
+  return `<div class="card" style="margin-bottom:12px"><div class="hd"><h3>${esc(t.name)} <span class="tag">${esc(t.category)}</span></h3><span id="st_${it.testId}">${pillFor(r.status)}</span></div><div class="bd">
+   <table><thead><tr><th style="width:34%">Parameter</th><th style="width:18%">Result</th><th style="width:10%">Unit</th><th style="width:20%">Reference Range</th><th>Flag</th></tr></thead><tbody>
+   ${t.parameters.map((pa,pi)=>{
+     const val=r.values[pa.name]||''; const f=flag(pa,val); 
+     const ref=pa.type==='num'?((isNaN(parseFloat(pa.refLow))?'—':pa.refLow)+' – '+(isNaN(parseFloat(pa.refHigh))?'—':pa.refHigh)):(pa.refText||'—');
+     return `<tr><td>${esc(pa.name)}</td>
+      <td>${pa.type==='num'?`<input type="number" step="any" style="width:100%;padding:6px 8px;border:1px solid #e3e8f0;border-radius:7px" value="${esc(val)}" oninput="setVal('${invId}','${it.testId}','${esc(pa.name).replace(/'/g,"\\'")}',this.value)">`:
+        `<select style="width:100%;padding:6px 8px;border:1px solid #e3e8f0;border-radius:7px" onchange="setVal('${invId}','${it.testId}','${esc(pa.name).replace(/'/g,"\\'")}',this.value)"><option value="">—</option>${(pa.refText||'').split(' / ').map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}</td>
+      <td class="tag">${esc(pa.unit||'')}</td><td class="tag">${esc(ref)}</td>
+      <td id="fl_${it.testId}_${pi}">${f==='H'?'<span class="flags fH">H ▲</span>':f==='L'?'<span class="flags fL">L ▼</span>':f==='N'?'<span style="color:#1a9e63">Normal</span>':''}</td></tr>`;}).join('')}
+   </tbody></table>
+   <div class="field" style="margin-top:10px"><label>Remarks / Interpretation</label><textarea rows="2" oninput="setRemarks('${invId}','${it.testId}',this.value)">${esc(r.remarks||'')}</textarea></div>
+   <div class="row">
+     ${r.status==='Draft'?`<button class="btn warn sm" onclick="verifyResult('${invId}','${it.testId}')">✔ Verify as ${esc(ME.role==='pathologist'?ME.name:'Pathologist')}</button>`:''}
+     ${r.status!=='Draft'?`<span class="tag">Verified by ${esc(r.verifiedBy)} on ${fmtDT(r.verifiedAt)}</span>`:''}
+     <button class="btn ghost sm" onclick="unverify('${invId}','${it.testId}')">↺ Reopen as Draft</button>
+     <span class="spacer"></span><button class="btn ghost sm" onclick="printReport('${invId}','${it.testId}')">🖨 Print Report</button>
+   </div></div></div>`;
+ }).join('');
+ modal('Result Entry — '+i.no+' · '+p.name,`<div class="note" style="margin-bottom:12px">${esc(p.mrn||'')} · ${esc(p.age||'')}/${esc(p.sex||'')} · ${esc(p.phone||'')} · Ref: ${esc(doctorById(i.doctorId).name)} · Invoice ${esc(i.no)}</div>`+body,
+  '<button class="btn ghost" onclick="save();closeModal();render()">Save & Close</button>',true);
+}
+function setVal(invId,testId,pname,v){
+ const i=S.invoices.find(x=>x.id===invId); const r=i.results[testId]; r.values[pname]=v;
+ const t=testById(i.items.find(x=>x.testId===testId).testId); const pa=t.parameters.find(x=>x.name===pname); const f=flag(pa,v);
+ const cell=document.getElementById('fl_'+testId+'_'+t.parameters.indexOf(pa));
+ if(cell) cell.innerHTML=f==='H'?'<span class="flags fH">H ▲</span>':f==='L'?'<span class="flags fL">L ▼</span>':f==='N'?'<span style="color:#1a9e63">Normal</span>':'';
+ save();
+}
+function setRemarks(invId,testId,v){ const i=S.invoices.find(x=>x.id===invId); i.results[testId].remarks=v; save(); }
+function verifyResult(invId,testId){ const i=S.invoices.find(x=>x.id===invId); const r=i.results[testId]; r.status='Verified'; r.verifiedBy=ME.name; r.verifiedAt=new Date().toISOString(); save(); openResult(invId); toast('Result verified'); }
+function unverify(invId,testId){ const i=S.invoices.find(x=>x.id===invId); const r=i.results[testId]; r.status='Draft'; r.verifiedBy=''; r.verifiedAt=''; r.printedAt=''; save(); openResult(invId); toast('Reopened as draft'); }
+
+/* ---------------- REPORTS ---------------- */
+function vReports(){
+ const invs=[...S.invoices].filter(i=>Object.keys(i.results||{}).length).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ return `<div class="toolbar"><span class="note">Only <b>Verified</b> results can be printed. Reports open in a print-ready A4 layout.</span></div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>Invoice</th><th>Date</th><th>Patient</th><th>Tests</th><th>Status</th><th>Verified By</th><th>Actions</th></tr></thead><tbody>
+ ${invs.length?invs.map(i=>{const st=statusOf(i); const first=Object.values(i.results)[0]||{};
+  return `<tr><td><b>${esc(i.no)}</b></td><td>${fmtDate(i.createdAt)}</td><td>${esc(patientById(i.patientId).name)}<div class="tag">${esc(patientById(i.patientId).mrn||'')}</div></td>
+  <td>${i.items.map(x=>esc(x.name)).join(', ')}</td><td>${pillFor(st)}</td><td>${esc(first.verifiedBy||'—')}</td>
+  <td class="row"><button class="btn sm ghost" onclick="printReport('${i.id}')">🖨 Print Full Report</button>
+   ${i.items.map(it=>`<button class="btn sm ghost" onclick="printReport('${i.id}','${it.testId}')">${esc(testById(it.testId)?.code||'')}</button>`).join('')}</td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">No results entered yet</td></tr>'}
+ </tbody></table></div></div>`;
+}
+async function printReport(invId,onlyTestId){
+ const i=S.invoices.find(x=>x.id===invId), p=patientById(i.patientId), d=doctorById(i.doctorId), st=S.settings;
+ const items=onlyTestId?i.items.filter(x=>x.testId===onlyTestId):i.items;
+ // verification gate
+ const unverified=items.filter(x=>{const r=i.results[x.testId]; return !r||r.status==='Draft';});
+ if(unverified.length){ toast('Cannot print — verify results first ('+unverified.map(x=>x.name).join(', ')+')'); return; }
+ const qr=await makeQR('Invoice: '+i.no+' | Patient: '+p.name+' | MRN: '+(p.mrn||'')+' | Lab: '+st.labName);
+ const sections=items.map(it=>{
+  const t=testById(it.testId); const r=i.results[it.testId]; if(!t||!r) return '';
+  const rows=t.parameters.map(pa=>{
+   const v=r.values[pa.name]||''; const f=flag(pa,v);
+   const ref=pa.type==='num'?((isNaN(parseFloat(pa.refLow))?'—':pa.refLow)+' – '+(isNaN(parseFloat(pa.refHigh))?'—':pa.refHigh)):(pa.refText||'—');
+   const abnormal=f==='H'||f==='L';
+   return `<tr><td>${esc(pa.name)}</td><td style="text-align:center;${abnormal?'font-weight:800;color:#c92a2a':''}">${esc(fmtNum(v))||'—'}</td><td style="text-align:center">${esc(pa.unit||'')}</td><td style="text-align:center">${esc(ref)}</td><td style="text-align:center;font-weight:800">${f==='H'?'H':f==='L'?'L':f==='N'?'':'—'}</td></tr>`;
+  }).join('');
+  return `<div class="rptTest"><div class="dhead">${esc(t.name)} <span>(${esc(t.category)})</span></div>
+   <table class="rt"><thead><tr><th>Investigation</th><th style="text-align:center">Result</th><th style="text-align:center">Unit</th><th style="text-align:center">Bio. Ref. Interval</th><th style="text-align:center">Flag</th></tr></thead><tbody>${rows}</tbody></table>
+   ${r.remarks?`<div class="rem"><b>Remarks:</b> ${esc(r.remarks)}</div>`:''}
+   <div class="vr">Verified by: <b>${esc(r.verifiedBy||'')}</b> ${r.verifiedAt?'on '+fmtDT(r.verifiedAt):''}</div></div>`;
+ }).join('');
+ const bar=st.showBarcode?barcodeSVG(i.no):'';
+ const html=`<div class="page">
+  <div class="lh">
+   <div class="lh-brand"><div class="mark">${st.logo?`<img src="${st.logo}" alt="logo" style="width:100%;height:100%;object-fit:contain;border-radius:14px;background:#fff">`:esc(initials(st.labName))}</div>
+    <div><div class="ln">${esc(st.labName)}</div><div class="tg">${esc(st.tagline||'')}</div>${st.regNo?`<div class="reg">${esc(st.regNo)}</div>`:''}</div></div>
+   <div class="lh-contact">${esc(st.address)}${st.city?'<br>'+esc(st.city):''}<br>Ph: ${esc(st.phone)} · ${esc(st.email)}<br>${esc(st.website)}${st.gstin?' · GSTIN '+esc(st.gstin):''}</div>
+  </div>
+  <div class="lh-bar"></div>
+  <div class="lh-title">Laboratory Test Report</div>
+  <div class="metaRow">
+   <div class="pinfo">
+    <div><span>Patient Name</span><b>${esc(p.name)}</b></div>
+    <div><span>Age / Sex</span><b>${esc(p.age||'—')} / ${esc(p.sex||'—')}</b></div>
+    <div><span>Patient ID (MRN)</span><b>${esc(p.mrn||'—')}</b></div>
+    <div><span>Invoice No.</span><b>${esc(i.no)}</b></div>
+    <div><span>Referred By</span><b>${esc(d.name)}</b></div>
+    <div><span>Sample Date</span><b>${fmtDT(i.collectedAt||i.createdAt)}</b></div>
+    <div><span>Report Date</span><b>${fmtDT(new Date().toISOString())}</b></div>
+    <div><span>Sample Type</span><b>${esc((testById(items[0]&&items[0].testId)||{}).sampleType||'—')}</b></div>
+   </div>
+   <div class="qrbox">${qr||''}<div class="tg">Scan to verify</div></div>
+  </div>
+  ${sections}
+  <div class="rec"><b>Recommendations & Notes</b><ul>
+   <li>Results relate only to the sample tested and should be interpreted by a qualified clinician.</li>
+   <li>Please correlate with clinical findings. Report not valid for medico-legal purposes unless countersigned.</li>
+   <li>Kindly retain this report for future reference. Abnormal values are marked <b style="color:#c92a2a">H</b> (high) / <b style="color:#0a56ad">L</b> (low).</li></ul></div>
+  <div class="signs">
+   <div class="sg"><div class="nm">${esc(st.technician)}</div><div class="rl">Lab Technician</div></div>
+   <div class="sg">${bar}</div>
+   <div class="sg"><div class="nm">${esc(st.pathologist1)}</div><div class="rl">${esc(st.pathologist1Q)}</div><div class="rl">Pathologist</div></div>
+  </div>
+  <div class="foot">${esc(st.labName)} · ${esc(st.address)} · ${esc(st.phone)} — Computer generated report${st.gstin?' · GSTIN '+esc(st.gstin):''}. Support: ${esc(st.support.name)} (${esc(st.support.phone)})</div>
+ </div>`;
+ // mark printed after printing
+ items.forEach(it=>{ const r=i.results[it.testId]; if(r){ r.status='Printed'; r.printedAt=new Date().toISOString(); } });
+ save();
+ openPrint('Report — '+i.no+' — '+p.name,html,true);
+ if(VIEW==='reports'||VIEW==='results') render();
+}
+function makeQR(text){
+ return new Promise(res=>{
+  if(!window.QRCode){ res(''); return; }
+  try{ QRCode.toDataURL(text,{margin:1,width:110},(e,url)=>res(e?'':'<img src="'+url+'" style="width:80px;height:80px">')); }catch(e){ res(''); }
+ });
+}
+function openPrint(title,body,isReport){
+ const w=window.open('','_blank');
+ if(!w){ toast('Allow pop-ups to print'); return; }
+ w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+ ${isReport?reportCSS():''}
+ body{font-family:Arial,Helvetica,sans-serif;color:#12203a;margin:14px}
+ .page{max-width:800px;margin:0 auto}
+ @media print{ @page{size:A4;margin:10mm} body{margin:0} .noprint{display:none} }
+ h1{font-size:20px}
+ table{width:100%;border-collapse:collapse}
+ </style></head><body><div class="noprint" style="text-align:right;margin-bottom:10px"><button onclick="window.print()" style="padding:8px 16px;border:none;border-radius:8px;background:#0f6fde;color:#fff;font-weight:700;cursor:pointer">🖨 Print / Save as PDF</button></div>${body}<script>setTimeout(function(){},200)<\/script></body></html>`);
+ w.document.close();
+}
+function reportCSS(){ return `
+ .page{font-family:Arial,Helvetica,sans-serif;color:#12203a;padding:4px 2px}
+ .lh{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 16px;border-radius:12px;background:linear-gradient(120deg,#0b1f3a 0%,#0f6fde 65%,#16a3c9 100%);color:#fff}
+ .lh-brand{display:flex;gap:13px;align-items:center}
+ .mark{flex:0 0 58px;width:58px;height:58px;border-radius:15px;overflow:hidden;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;letter-spacing:.5px}
+ .ln{font-size:23px;font-weight:800;letter-spacing:.3px;color:#fff;white-space:nowrap;line-height:1.1}
+ .tg{font-size:11px;color:rgba(255,255,255,.88);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+ .reg{font-size:9.5px;color:rgba(255,255,255,.82);letter-spacing:.4px;margin-top:2px;font-weight:600}
+ .lh-contact{text-align:right;font-size:10.5px;line-height:1.65;color:rgba(255,255,255,.94)}
+ .lh-bar{height:6px;margin:7px 0 11px;border-radius:3px;background:linear-gradient(90deg,#0f6fde,#16a3c9,#0f6fde)}
+ .lh-title{text-align:center;font-size:13px;font-weight:800;letter-spacing:2.5px;color:#0b1f3a;text-transform:uppercase;margin:0 0 11px}
+ .metaRow{display:flex;gap:12px;align-items:stretch;margin-bottom:14px}
+ .pinfo{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 14px;font-size:12px;background:#f6f9ff;border:1px solid #e0e9f8;border-left:4px solid #0f6fde;border-radius:9px;padding:11px 13px}
+ .pinfo span{display:block;color:#6b7a90;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+ .pinfo b{font-size:12.5px}
+ .qrbox{width:118px;text-align:center;border:1px solid #e0e9f8;border-radius:9px;padding:6px;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#fbfdff}
+ .qrbox .tg{color:#6b7a90;font-size:9.5px;letter-spacing:.4px}
+ .rptTest{margin-bottom:16px;page-break-inside:avoid}
+ .dhead{background:linear-gradient(90deg,#0f6fde,#16a3c9);color:#fff;padding:7px 11px;border-radius:7px 7px 0 0;font-weight:700;font-size:13px;letter-spacing:.3px}
+ .dhead span{font-weight:400;opacity:.85;font-size:11px}
+ table.rt{margin-bottom:6px}
+ table.rt th{background:#eef3fa;color:#345;font-size:10.5px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid #d5e0f0;letter-spacing:.3px}
+ table.rt td{padding:5px 8px;border-bottom:1px solid #eef1f6;font-size:12px}
+ .rem{font-size:11.5px;background:#fffaf0;border-left:3px solid #e08a00;padding:6px 10px;margin:4px 0}
+ .vr{font-size:10.5px;color:#6b7a90;text-align:right}
+ .rec{background:#f6f9ff;border:1px solid #e0e9f8;border-left:4px solid #16a3c9;border-radius:9px;padding:10px 14px;font-size:11px;margin:12px 0}
+ .rec ul{margin:6px 0 0 16px;padding:0} .rec li{margin-bottom:3px}
+ .signs{display:flex;justify-content:space-between;align-items:flex-end;margin-top:22px;padding-top:10px;border-top:2px solid #e3e8f0}
+ .sg{text-align:center;font-size:12px;min-width:170px}
+ .sg .nm{font-weight:700;border-top:1px dotted #999;padding-top:5px}
+ .sg .rl{font-size:10.5px;color:#6b7a90}
+ .foot{font-size:9.5px;color:#7d8ba0;text-align:center;margin-top:14px;border-top:3px solid #0f6fde;padding-top:8px}
+ table{width:100%;border-collapse:collapse}
+ `; }
+function upiURI(amount,note){ const st=S.settings; return 'upi://pay?pa='+encodeURIComponent(st.upiId||'')+'&pn='+encodeURIComponent(st.labName||'')+'&am='+(Number(amount)||0).toFixed(2)+'&cu=INR&tn='+encodeURIComponent(note||''); }
+async function payQRModal(id){
+ const i=S.invoices.find(x=>x.id===id), c=invComputed(i), st=S.settings;
+ if(!st.upiId){ toast('Add your UPI ID in Settings → Lab Profile first'); return; }
+ const amt=c.due>0?c.due:c.total;
+ const qr=await makeQR(upiURI(amt,'Invoice '+i.no));
+ modal('💳 Payment QR — '+i.no,`<div style="text-align:center">
+  <p class="tag">Scan with any UPI app (GPay / PhonePe / Paytm) to pay</p>
+  <div style="font-size:22px;font-weight:800;margin:6px 0">${money(amt)}</div>
+  <div style="margin:10px 0">${qr}</div>
+  <div class="note">UPI ID: <b>${esc(st.upiId)}</b><br>${esc(st.labName)}${c.due<c.total?' · balance due on '+esc(i.no):''}</div></div>`,
+ `<button class="btn ghost" onclick="closeModal()">Close</button>`);
+}
+async function printInvoice(id){
+ const i=S.invoices.find(x=>x.id===id), p=patientById(i.patientId), c=invComputed(i), d=doctorById(i.doctorId), st=S.settings;
+ const payQR=(st.upiId && c.due>0)?await makeQR(upiURI(c.due,'Invoice '+i.no)):'';
+ openPrint('Invoice '+i.no,`<div class="page">
+  <div class="lh">
+   <div class="lh-brand"><div class="mark">${st.logo?`<img src="${st.logo}" alt="logo" style="width:100%;height:100%;object-fit:contain;border-radius:14px;background:#fff">`:esc(initials(st.labName))}</div>
+    <div><div class="ln">${esc(st.labName)}</div><div class="tg">${esc(st.tagline||'')}</div>${st.regNo?`<div class="reg">${esc(st.regNo)}</div>`:''}</div></div>
+   <div class="lh-contact">${esc(st.address)}${st.city?'<br>'+esc(st.city):''}<br>Ph: ${esc(st.phone)} · ${esc(st.email)}<br>${esc(st.website)}${st.gstin?' · GSTIN '+esc(st.gstin):''}</div>
+  </div>
+  <div class="lh-bar"></div>
+  <div class="lh-title">Tax Invoice</div>
+  <div class="metaRow">
+   <div class="pinfo">
+    <div><span>Patient / Billed To</span><b>${esc(p.name)}</b></div>
+    <div><span>Patient ID (MRN)</span><b>${esc(p.mrn||'—')}</b></div>
+    <div><span>Age / Sex</span><b>${esc(p.age||'—')} / ${esc(p.sex||'—')}</b></div>
+    <div><span>Invoice No.</span><b>${esc(i.no)}</b></div>
+    <div><span>Invoice Date</span><b>${fmtDT(i.createdAt)}</b></div>
+    <div><span>Phone</span><b>${esc(p.phone||'—')}</b></div>
+    <div><span>Referred By</span><b>${esc(d.name)}</b></div>
+    <div><span>Payment Mode</span><b>${esc(i.paymentMode)}</b></div>
+   </div>
+  </div>
+  <table class="rt"><thead><tr><th style="text-align:left">#</th><th style="text-align:left">Test / Investigation</th><th style="text-align:right">Amount</th></tr></thead><tbody>
+  ${i.items.map((x,n)=>`<tr><td>${n+1}</td><td>${esc(x.name)}</td><td style="text-align:right">${money(x.price)}</td></tr>`).join('')}
+  </tbody></table>
+  <table style="width:60%;margin-left:auto;margin-top:8px"><tbody>
+   <tr><td style="text-align:right;padding:5px 10px;color:#6b7a90">Subtotal</td><td style="text-align:right;padding:5px 10px;width:40%">${money(c.sub)}</td></tr>
+   <tr><td style="text-align:right;padding:5px 10px;color:#6b7a90">Discount</td><td style="text-align:right;padding:5px 10px">- ${money(c.disc)}</td></tr>
+   <tr><td style="text-align:right;padding:5px 10px;color:#6b7a90">GST @ ${i.gstPct}%</td><td style="text-align:right;padding:5px 10px">${money(c.gst)}</td></tr>
+   <tr style="background:#eef3fa"><td style="text-align:right;padding:7px 10px;font-weight:800">Grand Total</td><td style="text-align:right;padding:7px 10px;font-weight:800">${money(c.total)}</td></tr>
+   <tr><td style="text-align:right;padding:5px 10px;color:#6b7a90">Paid</td><td style="text-align:right;padding:5px 10px">${money(c.paid)}</td></tr>
+   <tr><td style="text-align:right;padding:5px 10px;font-weight:800;color:#c92a2a">Balance Due</td><td style="text-align:right;padding:5px 10px;font-weight:800;color:#c92a2a">${money(c.due)}</td></tr>
+  </tbody></table>
+  ${payQR?`<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:16px;border:1px dashed #0f6fde;border-radius:9px;padding:10px 12px;background:#fbfdff">
+   <div style="font-size:12px"><b>Scan to Pay ${money(c.due)}</b><div style="font-size:11px;color:#666">UPI ID: ${esc(st.upiId)}</div><div style="font-size:10px;color:#8a97a8;margin-top:3px">GPay · PhonePe · Paytm — amount pre-filled</div></div>
+   <div style="text-align:center">${payQR}<div style="font-size:9px;color:#8a97a8;text-transform:uppercase;letter-spacing:.4px">Payment QR</div></div></div>`:''}
+  <div style="display:flex;justify-content:flex-end;margin-top:26px"><div class="sg"><div class="nm">For ${esc(st.labName)}</div><div class="rl">Authorised Signatory</div></div></div>
+  <div class="foot">${esc(st.labName)} · ${esc(st.address)} · ${esc(st.phone)} — Computer generated invoice${st.gstin?' · GSTIN '+esc(st.gstin):''} · Thank you for choosing us</div>
+ </div>`,true);
+}
+
+/* ---------------- BOOKINGS ---------------- */
+function vBookings(){
+ const bs=[...S.bookings].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+ return `<div class="toolbar"><button class="btn ghost" onclick="openBookingForm(true)">+ Manual Booking</button>
+  <span class="spacer"></span><span class="tag">Public booking form is embedded in the patient website (see Settings)</span></div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>Booking ID</th><th>Patient</th><th>Phone</th><th>Tests</th><th>Preferred</th><th>Collection</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+ ${bs.length?bs.map(b=>`<tr><td><b>${esc(b.id)}</b><div class="tag">${fmtDT(b.createdAt)}</div></td><td>${esc(b.name)}<div class="tag">${esc(b.age||'')}/${esc(b.sex||'')}</div></td>
+  <td>${esc(b.phone)}</td><td>${esc((b.tests||[]).join(', '))}</td><td>${esc(b.date||'')} ${esc(b.slot||'')}</td><td>${b.home?'Home Collection':'At Lab'}</td>
+  <td>${pillFor(b.status||'New')}</td>
+  <td class="row"><button class="btn sm" onclick="convertBooking('${b.id}')">Convert to Invoice</button>
+   <a class="btn sm ok" target="_blank" href="https://wa.me/${(b.phone||'').replace(/\\D/g,'')}?text=${encodeURIComponent('Hello '+b.name+', your booking '+b.id+' at '+S.settings.labName+' is confirmed.')}">WhatsApp</a>
+   <button class="btn sm bad" onclick="delBooking('${b.id}')">Delete</button></td></tr>`).join(''):'<tr><td colspan="8" class="empty">No online bookings yet</td></tr>'}
+ </tbody></table></div></div>`;
+}
+function openBookingForm(manual){
+ const testOpts=S.tests.map(t=>`<option value="${esc(t.name)}">${esc(t.name)} — ${money(t.price)}</option>`).join('');
+ modal(manual?'New Manual Booking':'Patient Booking',`<div class="grid g2">
+  <div class="field"><label>Full Name *</label><input id="bkName"></div>
+  <div class="field"><label>Mobile *</label><input id="bkPhone"></div>
+  <div class="field"><label>Age</label><input id="bkAge"></div>
+  <div class="field"><label>Sex</label><select id="bkSex"><option>Male</option><option>Female</option><option>Other</option></select></div>
+  <div class="field"><label>Preferred Date</label><input id="bkDate" type="date" value="${today()}"></div>
+  <div class="field"><label>Time Slot</label><select id="bkSlot">${['07:00–09:00','09:00–11:00','11:00–13:00','16:00–18:00','18:00–20:00'].map(s=>`<option>${s}</option>`).join('')}</select></div>
+  <div class="field"><label>Home Collection</label><select id="bkHome"><option value="0">No — visit lab</option><option value="1">Yes — home collection</option></select></div>
+  <div class="field"><label>Address (if home)</label><input id="bkAddr"></div>
+ </div>
+ <div class="field"><label>Tests (Ctrl/Cmd-click for multiple)</label><select id="bkTests" multiple size="6" style="width:100%">${testOpts}</select></div>`,
+ `<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveBooking()">Save Booking</button>`);
+}
+function saveBooking(){
+ const name=document.getElementById('bkName').value.trim(), phone=document.getElementById('bkPhone').value.trim();
+ if(!name||!phone){toast('Name and mobile are required');return;}
+ const sel=[...document.getElementById('bkTests').selectedOptions].map(o=>o.value);
+ const b={ id:'BK-'+String(S.counters.bk++).padStart(4,'0'), name, phone, age:document.getElementById('bkAge').value.trim(),
+  sex:document.getElementById('bkSex').value, date:document.getElementById('bkDate').value, slot:document.getElementById('bkSlot').value,
+  home:document.getElementById('bkHome').value==='1', address:document.getElementById('bkAddr').value.trim(),
+  tests:sel, status:'New', createdAt:new Date().toISOString() };
+ S.bookings.push(b); save(); closeModal(); render(); toast('Booking '+b.id+' recorded');
+}
+function convertBooking(id){
+ const b=S.bookings.find(x=>x.id===id); if(!b)return;
+ // create patient + invoice
+ const doc=S.doctors[S.doctors.length-1].id;
+ const mrn='MD-'+String(S.counters.mrn++).padStart(4,'0');
+ const p={id:uid(),mrn,name:b.name,age:b.age,sex:b.sex,phone:b.phone,email:'',address:b.address||'',doctorId:doc,createdAt:new Date().toISOString()};
+ S.patients.push(p);
+ const items=b.tests.map(n=>{const t=S.tests.find(x=>x.name===n); return {testId:t?t.id:'',name:n,price:t?t.price:0};});
+ const inv={id:uid(),no:'INV-'+new Date().getFullYear()+String(S.counters.inv++).padStart(4,'0'),patientId:p.id,doctorId:doc,items,discount:0,gstPct:S.settings.gstDefault,paid:0,paymentMode:'Cash',createdAt:new Date().toISOString(),results:{}};
+ S.invoices.push(inv); b.status='Converted'; b.invoiceId=inv.id; save(); render(); toast('Converted to invoice '+inv.no);
+}
+function delBooking(id){ if(!confirm('Delete booking '+id+'?'))return; S.bookings=S.bookings.filter(b=>b.id!==id); save(); render(); }
+
+/* ---------------- ANALYTICS ---------------- */
+function vAnalytics(){
+ const invs=S.invoices; const total=invs.reduce((a,i)=>a+invComputed(i).total,0);
+ const collected=invs.reduce((a,i)=>a+invComputed(i).paid,0);
+ const byCat={}; invs.forEach(i=>i.items.forEach(it=>{const t=S.tests.find(x=>x.id===it.testId); const c=t?t.category:'Other'; byCat[c]=(byCat[c]||0)+it.price;}));
+ const byMode={}; invs.forEach(i=>{byMode[i.paymentMode]=(byMode[i.paymentMode]||0)+invComputed(i).paid;});
+ const byDoc={}; invs.forEach(i=>{const c=invComputed(i); const d=doctorById(i.doctorId); byDoc[d.name]=(byDoc[d.name]||0)+c.taxable*d.commissionPct/100;});
+ const months={}; invs.forEach(i=>{const k=i.createdAt.slice(0,7); months[k]=(months[k]||0)+invComputed(i).total;});
+ const mKeys=Object.keys(months).sort(); const maxM=Math.max(1,...Object.values(months));
+ const catEntries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]); const maxC=Math.max(1,...catEntries.map(x=>x[1]));
+ return `<div class="grid g4" style="margin-bottom:14px">
+  ${kpi('Gross Revenue',money(total),invs.length+' invoices')}
+  ${kpi('Collected',money(collected),'Collection rate '+(total?(collected/total*100).toFixed(1):'0')+'%')}
+  ${kpi('Outstanding',money(total-collected),'To be recovered')}
+  ${kpi('Avg Bill Value',money(invs.length?total/invs.length:0),'Per invoice')}
+ </div>
+ <div class="grid g2" style="margin-bottom:14px">
+  <div class="card"><div class="hd"><h3>Monthly Revenue</h3></div><div class="bd">${mKeys.length?bars(mKeys.map(k=>({label:k,v:months[k],m:money,max:maxM}))):'<div class="empty">No data</div>'}</div></div>
+  <div class="card"><div class="hd"><h3>Revenue by Test Category</h3></div><div class="bd">
+   ${catEntries.length?catEntries.map(([n,v])=>`<div style="margin-bottom:10px"><div class="row"><span>${esc(n)}</span><span class="spacer"></span><b>${money(v)}</b></div><div class="bar"><i style="width:${(v/maxC*100).toFixed(0)}%"></i></div></div>`).join(''):'<div class="empty">No data</div>'}</div></div>
+ </div>
+ <div class="grid g2">
+  <div class="card"><div class="hd"><h3>Payments by Mode</h3></div><div class="bd"><table><thead><tr><th>Mode</th><th>Amount</th></tr></thead><tbody>${Object.entries(byMode).map(([m,v])=>`<tr><td>${esc(m)}</td><td>${money(v)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">No payments</td></tr>'}</tbody></table></div></div>
+  <div class="card"><div class="hd"><h3>Doctor Commission Payable</h3></div><div class="bd"><table><thead><tr><th>Doctor</th><th>Commission</th></tr></thead><tbody>${Object.entries(byDoc).map(([d,v])=>`<tr><td>${esc(d)}</td><td>${money(v)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">No data</td></tr>'}</tbody></table></div></div>
+ </div>`;
+}
+
+/* ---------------- TEST CATALOG ---------------- */
+function vTests(){
+ return `<div class="toolbar"><button class="btn" onclick="editTest()">+ New Test</button><span class="spacer"></span><span class="tag">${S.tests.length} tests in catalog</span></div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>Code</th><th>Test Name</th><th>Category</th><th>Sample</th><th>Parameters</th><th>Price</th><th>Actions</th></tr></thead><tbody>
+ ${S.tests.map(t=>`<tr><td><b>${esc(t.code)}</b></td><td>${esc(t.name)}</td><td>${esc(t.category)}</td><td class="tag">${esc(t.sampleType)}</td><td>${t.parameters.length}</td><td>${money(t.price)}</td>
+  <td class="row"><button class="btn sm ghost" onclick="editTest('${t.id}')">Edit</button><button class="btn sm bad" onclick="delTest('${t.id}')">Delete</button></td></tr>`).join('')}
+ </tbody></table></div></div>`;
+}
+function editTest(id){
+ const t=id?testById(id):{code:'',name:'',category:'Biochemistry',price:0,sampleType:'Serum',parameters:[]};
+ modal(id?'Edit Test':'New Test',`<div class="grid g3">
+  <div class="field"><label>Code</label><input id="tCode" value="${esc(t.code)}"></div>
+  <div class="field"><label>Test Name</label><input id="tName" value="${esc(t.name)}"></div>
+  <div class="field"><label>Category</label><input id="tCat" value="${esc(t.category)}"></div>
+  <div class="field"><label>Price (₹)</label><input id="tPrice" type="number" value="${t.price}"></div>
+  <div class="field"><label>Sample Type</label><input id="tSample" value="${esc(t.sampleType)}"></div>
+  <div class="field"><label>Turnaround</label><input id="tTat" value="${esc(t.tat||'Same day')}"></div></div>
+ <div style="font-weight:700;margin:10px 0 6px">Parameters & Reference Ranges</div>
+ <div id="paramRows">${(t.parameters||[]).map((p,i)=>paramRow(p,i)).join('')}</div>
+ <button class="btn ghost sm" style="margin-top:8px" onclick="addParamRow()">+ Add Parameter</button>`,
+ `<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveTest('${id||''}')">Save Test</button>`,true);
+}
+function paramRow(p,i){
+ p=p||{name:'',unit:'',refLow:'',refHigh:'',type:'num',refText:''};
+ return `<div class="row" style="margin-bottom:6px" data-prow>
+  <input placeholder="Parameter name" value="${esc(p.name)}" data-p="name" style="flex:2;padding:7px;border:1px solid #e3e8f0;border-radius:7px">
+  <input placeholder="Unit" value="${esc(p.unit||'')}" data-p="unit" style="flex:1;padding:7px;border:1px solid #e3e8f0;border-radius:7px">
+  <select data-p="type" style="padding:7px;border:1px solid #e3e8f0;border-radius:7px"><option value="num" ${p.type==='num'?'selected':''}>Numeric</option><option value="text" ${p.type==='text'?'selected':''}>Text options</option></select>
+  <input placeholder="Low" value="${esc(p.refLow==null?'':p.refLow)}" data-p="refLow" style="width:70px;padding:7px;border:1px solid #e3e8f0;border-radius:7px">
+  <input placeholder="High" value="${esc(p.refHigh==null?'':p.refHigh)}" data-p="refHigh" style="width:70px;padding:7px;border:1px solid #e3e8f0;border-radius:7px">
+  <input placeholder="Text options (a / b / c)" value="${esc(p.refText||'')}" data-p="refText" style="flex:2;padding:7px;border:1px solid #e3e8f0;border-radius:7px">
+  <button class="x" onclick="this.closest('[data-prow]').remove()">✕</button></div>`;
+}
+function addParamRow(){ const d=document.createElement('div'); d.innerHTML=paramRow({},0); document.getElementById('paramRows').appendChild(d.firstElementChild); }
+function saveTest(id){
+ const name=document.getElementById('tName').value.trim(); if(!name){toast('Test name required');return;}
+ const params=[...document.querySelectorAll('[data-prow]')].map(r=>{
+  const g=k=>r.querySelector('[data-p="'+k+'"]').value;
+  const type=g('type');
+  return {name:g('name'),unit:g('unit'),type,refLow:type==='num'&&g('refLow')!==''?parseFloat(g('refLow')):null,refHigh:type==='num'&&g('refHigh')!==''?parseFloat(g('refHigh')):null,refText:g('refText')};
+ }).filter(p=>p.name);
+ const data={code:document.getElementById('tCode').value.trim()||name.slice(0,4).toUpperCase(),name,category:document.getElementById('tCat').value.trim(),price:+document.getElementById('tPrice').value||0,sampleType:document.getElementById('tSample').value.trim(),tat:document.getElementById('tTat').value.trim(),parameters:params};
+ if(id) Object.assign(testById(id),data); else S.tests.push(Object.assign({id:uid()},data));
+ save(); closeModal(); render(); toast('Test saved');
+}
+function delTest(id){ if(!confirm('Delete this test from the catalog?'))return; S.tests=S.tests.filter(t=>t.id!==id); save(); render(); }
+
+/* ---------------- DOCTORS ---------------- */
+function vDoctors(){
+ return `<div class="toolbar"><button class="btn" onclick="editDoctor()">+ New Doctor</button></div>
+ <div class="card"><div class="tblWrap"><table><thead><tr><th>Name</th><th>Qualification</th><th>Speciality</th><th>Phone</th><th>Commission %</th><th>Business</th><th>Actions</th></tr></thead><tbody>
+ ${S.doctors.map(d=>{const biz=S.invoices.filter(i=>i.doctorId===d.id).reduce((a,i)=>a+invComputed(i).taxable,0);
+  return `<tr><td><b>${esc(d.name)}</b></td><td class="tag">${esc(d.qualification||'')}</td><td>${esc(d.speciality||'')}</td><td>${esc(d.phone||'')}</td><td>${d.commissionPct}%</td><td>${money(biz)}</td>
+  <td class="row"><button class="btn sm ghost" onclick="editDoctor('${d.id}')">Edit</button><button class="btn sm bad" onclick="delDoctor('${d.id}')">Delete</button></td></tr>`;}).join('')}
+ </tbody></table></div></div>`;
+}
+function editDoctor(id){
+ const d=id?doctorById(id):{name:'',qualification:'',speciality:'',commissionPct:0,phone:''};
+ modal(id?'Edit Doctor':'New Doctor',`<div class="grid g2">
+  <div class="field"><label>Name *</label><input id="drName" value="${esc(d.name)}"></div>
+  <div class="field"><label>Qualification</label><input id="drQ" value="${esc(d.qualification||'')}"></div>
+  <div class="field"><label>Speciality</label><input id="drSp" value="${esc(d.speciality||'')}"></div>
+  <div class="field"><label>Phone</label><input id="drPh" value="${esc(d.phone||'')}"></div>
+  <div class="field"><label>Commission %</label><input id="drC" type="number" value="${d.commissionPct}"></div></div>`,
+ `<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveDoctor('${id||''}')">Save</button>`);
+}
+function saveDoctor(id){
+ const name=document.getElementById('drName').value.trim(); if(!name){toast('Name required');return;}
+ const data={name,qualification:document.getElementById('drQ').value.trim(),speciality:document.getElementById('drSp').value.trim(),phone:document.getElementById('drPh').value.trim(),commissionPct:+document.getElementById('drC').value||0};
+ if(id) Object.assign(doctorById(id),data); else S.doctors.push(Object.assign({id:uid()},data));
+ save(); closeModal(); render(); toast('Doctor saved');
+}
+function delDoctor(id){ if(!confirm('Delete this doctor?'))return; S.doctors=S.doctors.filter(d=>d.id!==id); save(); render(); }
+
+/* ---------------- SETTINGS ---------------- */
+let setTab='lab';
+function vSettings(){
+ const st=S.settings;
+ const tab=(t,l)=>`<button class="${setTab===t?'active':''}" onclick="setTab='${t}';render()">${l}</button>`;
+ return `<div class="tabs">${tab('lab','Lab Profile')}${tab('users','Users & Roles')}${tab('report','Report Options')}${tab('web','Website & Booking')}${tab('cloud','Cloud Backend')}</div>
+ <div class="card"><div class="bd">${setTab==='lab'?labForm():setTab==='users'?usersTab():setTab==='report'?reportTab():setTab==='web'?webTab():cloudTab()}</div></div>`;
+}
+function labForm(){ const st=S.settings; return `<div class="grid g2">
+ <div class="field"><label>Lab Name</label><input id="sLab" value="${esc(st.labName)}"></div>
+ <div class="field"><label>Tagline</label><input id="sTag" value="${esc(st.tagline)}"></div>
+ <div class="field"><label>Phone</label><input id="sPhone" value="${esc(st.phone)}"></div>
+ <div class="field"><label>Email</label><input id="sEmail" value="${esc(st.email)}"></div>
+ <div class="field"><label>Website</label><input id="sWeb" value="${esc(st.website)}"></div>
+ <div class="field"><label>GSTIN</label><input id="sGstin" value="${esc(st.gstin)}"></div>
+ <div class="field"><label>Registration / NABL No.</label><input id="sRegNo" value="${esc(st.regNo||'')}" placeholder="e.g. NABL-M(EL)T-03160"></div>
+ <div class="field"><label>Default GST %</label><select id="sGst">${[0,5,12,18].map(g=>`<option value="${g}" ${st.gstDefault==g?'selected':''}>${g}%</option>`).join('')}</select></div>
+ <div class="field"><label>WhatsApp Number</label><input id="sWa" value="${esc(st.whatsapp)}"></div>
+ <div class="field"><label>UPI ID (for payment QR)</label><input id="sUpi" value="${esc(st.upiId||'')}" placeholder="e.g. muskanlab@upi"></div>
+ <div class="field"><label>Lab Logo</label>
+  <div style="display:flex;align-items:center;gap:12px">
+   <div style="width:58px;height:58px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fbfcfe">${st.logo?`<img src="${st.logo}" style="width:100%;height:100%;object-fit:contain">`:esc(initials(st.labName))}</div>
+   <input type="file" id="sLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="onLogoPick(this)" style="max-width:230px">
+   ${st.logo?`<button type="button" class="btn sm ghost" onclick="clearLogo()">Remove</button>`:''}
+  </div>
+  <div class="tag" style="margin-top:6px">PNG / JPG / WebP / SVG — square logo best (under 1 MB). Replaces the initials on invoice, report, sidebar and login.</div></div></div>
+ <div class="field"><label>Address</label><textarea id="sAddr" rows="2">${esc(st.address)}</textarea></div>
+ <div class="field"><label>City</label><input id="sCity" value="${esc(st.city)}"></div>
+ <button class="btn" onclick="saveLab()">Save Profile</button>`; }
+function saveLab(){
+ Object.assign(S.settings,{labName:document.getElementById('sLab').value.trim()||'My Lab',tagline:document.getElementById('sTag').value.trim(),phone:document.getElementById('sPhone').value.trim(),email:document.getElementById('sEmail').value.trim(),website:document.getElementById('sWeb').value.trim(),gstin:document.getElementById('sGstin').value.trim(),gstDefault:+document.getElementById('sGst').value,whatsapp:document.getElementById('sWa').value.trim(),address:document.getElementById('sAddr').value.trim(),city:document.getElementById('sCity').value.trim(),upiId:document.getElementById('sUpi').value.trim(),regNo:document.getElementById('sRegNo').value.trim()});
+ save(); paintChrome(); render(); toast('Profile saved');
+}
+function onLogoPick(inp){
+ const f=inp.files&&inp.files[0]; if(!f) return;
+ if(!/^image\/(png|jpe?g|webp|svg\+xml)$/.test(f.type)){ toast('Please choose a PNG, JPG, WebP or SVG image'); inp.value=''; return; }
+ if(f.size>1024*1024){ toast('Logo too large — please use an image under 1 MB'); inp.value=''; return; }
+ const r=new FileReader();
+ r.onload=()=>{ S.settings.logo=r.result; save(); paintChrome(); render(); toast('Logo updated'); };
+ r.readAsDataURL(f);
+}
+function clearLogo(){ S.settings.logo=''; save(); paintChrome(); render(); toast('Logo removed'); }
+function usersTab(){
+ return `<div class="toolbar"><button class="btn" onclick="editUser()">+ Add User</button></div>
+ <table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Password</th><th>Actions</th></tr></thead><tbody>
+ ${S.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.username)}</td><td>${pillFor(u.role)}</td><td class="tag">${esc(u.password)}</td>
+  <td class="row"><button class="btn sm ghost" onclick="editUser('${u.id}')">Edit</button>${u.id!==ME.id?`<button class="btn sm bad" onclick="delUser('${u.id}')">Delete</button>`:''}</td></tr>`).join('')}
+ </tbody></table><div class="note" style="margin-top:12px">Roles: <b>admin</b> (all), <b>receptionist</b> (patients, billing, bookings, samples), <b>technician</b> (samples, results, tests), <b>pathologist</b> (results, reports, analytics), <b>accountant</b> (billing, reports, analytics, doctors).</div>`;
+}
+function editUser(id){
+ const u=id?S.users.find(x=>x.id===id):{name:'',username:'',password:'',role:'receptionist'};
+ modal(id?'Edit User':'New User',`<div class="grid g2">
+  <div class="field"><label>Full Name</label><input id="uName" value="${esc(u.name)}"></div>
+  <div class="field"><label>Username</label><input id="uUser" value="${esc(u.username)}"></div>
+  <div class="field"><label>Password</label><input id="uPass" value="${esc(u.password)}"></div>
+  <div class="field"><label>Role</label><select id="uRole">${['admin','receptionist','technician','pathologist','accountant'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></div></div>`,
+ `<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveUser('${id||''}')">Save</button>`);
+}
+function saveUser(id){
+ const uname=document.getElementById('uUser').value.trim(); if(!uname){toast('Username required');return;}
+ const data={name:document.getElementById('uName').value.trim()||uname,username:uname,password:document.getElementById('uPass').value||'1234',role:document.getElementById('uRole').value};
+ if(id) Object.assign(S.users.find(x=>x.id===id),data); else S.users.push(Object.assign({id:uid()},data));
+ save(); closeModal(); render(); toast('User saved');
+}
+function delUser(id){ if(!confirm('Delete this user?'))return; S.users=S.users.filter(u=>u.id!==id); save(); render(); }
+function reportTab(){ const st=S.settings; return `<div class="grid g2">
+ <div class="field"><label>Lab Technician</label><input id="rTech" value="${esc(st.technician)}"></div>
+ <div class="field"><label>Show Barcode on Report</label><select id="rBar"><option value="1" ${st.showBarcode?'selected':''}>Yes</option><option value="0" ${!st.showBarcode?'selected':''}>No</option></select></div>
+ <div class="field"><label>Pathologist 1</label><input id="rP1" value="${esc(st.pathologist1)}"></div>
+ <div class="field"><label>Qualification 1</label><input id="rP1Q" value="${esc(st.pathologist1Q)}"></div>
+ <div class="field"><label>Pathologist 2</label><input id="rP2" value="${esc(st.pathologist2)}"></div>
+ <div class="field"><label>Qualification 2</label><input id="rP2Q" value="${esc(st.pathologist2Q)}"></div></div>
+ <button class="btn" onclick="saveReportOpts()">Save</button>`; }
+function saveReportOpts(){ Object.assign(S.settings,{technician:document.getElementById('rTech').value.trim(),showBarcode:document.getElementById('rBar').value==='1',pathologist1:document.getElementById('rP1').value.trim(),pathologist1Q:document.getElementById('rP1Q').value.trim(),pathologist2:document.getElementById('rP2').value.trim(),pathologist2Q:document.getElementById('rP2Q').value.trim()}); save(); toast('Saved'); }
+function webTab(){ const s=S.settings; return `<div class="note" style="margin-bottom:12px">Share these details on your website so patients can book tests online. Bookings appear under <b>Online Bookings</b>.</div>
+ <div class="grid g2">
+ <div class="field"><label>Booking WhatsApp</label><input id="wWa" value="${esc(s.whatsapp)}"></div>
+ <div class="field"><label>Support Name</label><input id="wSn" value="${esc(s.support.name)}"></div>
+ <div class="field"><label>Support Phone</label><input id="wSp" value="${esc(s.support.phone)}"></div>
+ <div class="field"><label>Support Email</label><input id="wSe" value="${esc(s.support.email)}"></div></div>
+ <button class="btn" onclick="saveWeb()">Save</button>
+ <div style="margin-top:16px"><b>Patient booking link (copy into your website):</b>
+ <div class="note" style="margin-top:6px;font-family:monospace;font-size:12px">Book online at ${esc(s.website)} — or WhatsApp ${esc(s.whatsapp)}</div></div>`; }
+function saveWeb(){ Object.assign(S.settings,{whatsapp:document.getElementById('wWa').value.trim(),support:{name:document.getElementById('wSn').value.trim(),phone:document.getElementById('wSp').value.trim(),email:document.getElementById('wSe').value.trim()}}); save(); paintChrome(); render(); toast('Saved'); }
+function cloudTab(){ const c=S.settings.cloud; return `<div class="note" style="margin-bottom:12px">Optional: connect a Supabase project to sync bookings/patients across devices. The app works fully offline without it. Never paste a <b>service_role</b> key here — use the public <b>anon</b> key only.</div>
+ <div class="grid g2">
+ <div class="field"><label>Supabase URL</label><input id="cUrl" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co"></div>
+ <div class="field"><label>Supabase Anon Key</label><input id="cKey" value="${esc(c.key)}" placeholder="eyJhbGciOi…"></div></div>
+ <div class="row"><button class="btn" onclick="saveCloud()">Save</button><button class="btn ghost" onclick="testCloud()">Test Connection</button></div>
+ <div id="cloudMsg" style="margin-top:10px"></div>`; }
+function saveCloud(){ S.settings.cloud={url:document.getElementById('cUrl').value.trim(),key:document.getElementById('cKey').value.trim()}; save(); toast('Saved'); }
+async function testCloud(){ const c=S.settings.cloud; const m=document.getElementById('cloudMsg'); if(!c.url){m.innerHTML='<span style="color:#d63b3b">Enter a URL first</span>';return;} m.textContent='Testing…';
+ try{ const r=await fetch(c.url.replace(/\/$/,'')+'/rest/v1/',{headers:{apikey:c.key,Authorization:'Bearer '+c.key}}); m.innerHTML=r.ok?'<span style="color:#1a9e63">Connected ✓</span>':'<span style="color:#d08a00">Reached server (HTTP '+r.status+') — check anon key</span>'; }
+ catch(e){ m.innerHTML='<span style="color:#d63b3e">Could not reach server: '+esc(e.message)+'</span>'; } }
+
+/* ---------------- BACKUP ---------------- */
+function vBackup(){
+ return `<div class="grid g2">
+  <div class="card"><div class="hd"><h3>Export Backup</h3></div><div class="bd"><p class="tag">Download all patients, invoices, results, bookings and settings as a JSON file.</p><button class="btn" onclick="exportData()">⬇ Download JSON Backup</button></div></div>
+  <div class="card"><div class="hd"><h3>Import Backup</h3></div><div class="bd"><p class="tag">Restore from a previously exported JSON backup. This replaces current data.</p><input type="file" id="impFile" accept=".json"><button class="btn ghost" style="margin-top:8px" onclick="importData()">⬆ Import & Replace</button></div></div>
+  <div class="card"><div class="hd"><h3>Export Records (CSV)</h3></div><div class="bd"><p class="tag">Spreadsheet-friendly exports for accounting.</p><button class="btn ghost" onclick="exportCSV('patients')">Patients CSV</button> <button class="btn ghost" onclick="exportCSV('invoices')">Invoices CSV</button></div></div>
+  <div class="card"><div class="hd"><h3 style="color:#b02c2c">Danger Zone</h3></div><div class="bd"><p class="tag">Permanently erase all local data and reset to defaults.</p><button class="btn bad" onclick="resetAll()">Reset All Data</button></div></div>
+ </div>`;
+}
+function download(name,text,type){ const b=new Blob([text],{type:type||'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+function exportData(){ download('pathlab-backup-'+today()+'.json',JSON.stringify(S,null,2)); toast('Backup downloaded'); }
+function importData(){
+ const f=document.getElementById('impFile').files[0]; if(!f){toast('Choose a file first');return;}
+ const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d.tests) throw 0; S=d; save(); paintChrome(); render(); toast('Data imported'); }catch(e){ toast('Invalid backup file'); } }; r.readAsText(f);
+}
+function exportCSV(kind){
+ let rows=[];
+ if(kind==='patients'){ rows.push(['MRN','Name','Age','Sex','Phone','Address','ReferredBy','Registered']); S.patients.forEach(p=>rows.push([p.mrn,p.name,p.age,p.sex,p.phone,p.address,doctorById(p.doctorId).name,fmtDate(p.createdAt)])); }
+ else{ rows.push(['Invoice','Date','Patient','MRN','Tests','Subtotal','Discount','GST','Total','Paid','Due','Status']); S.invoices.forEach(i=>{const c=invComputed(i); rows.push([i.no,fmtDate(i.createdAt),patientById(i.patientId).name,patientById(i.patientId).mrn,i.items.map(x=>x.name).join('; '),c.sub.toFixed(2),c.disc.toFixed(2),c.gst.toFixed(2),c.total.toFixed(2),c.paid.toFixed(2),c.due.toFixed(2),statusOf(i)]);}); }
+ const csv=rows.map(r=>r.map(x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"').join(',')).join('\n');
+ download(kind+'-'+today()+'.csv',csv,'text/csv'); toast('CSV downloaded');
+}
+function resetAll(){ if(!confirm('Reset ALL data? This cannot be undone. Export a backup first.'))return; if(!confirm('Are you absolutely sure?'))return; S=defaultState(); save(); paintChrome(); go('dashboard'); toast('All data reset'); }
+
+/* ---------------- GLOBAL SEARCH ---------------- */
+function globalSearch(q){
+ if(!q||q.length<2) return;
+ const p=S.patients.filter(x=>[x.name,x.mrn,x.phone].join(' ').toLowerCase().includes(q.toLowerCase()));
+ const iv=S.invoices.filter(x=>[x.no,patientById(x.patientId).name].join(' ').toLowerCase().includes(q.toLowerCase()));
+ modal('Search results for "'+q+'"',`${p.length?'<div style="font-weight:700;margin-bottom:6px">Patients</div><table><tbody>'+p.slice(0,8).map(x=>`<tr><td><b>${esc(x.name)}</b><div class="tag">${esc(x.mrn)} · ${esc(x.phone||'')}</div></td><td><button class="btn sm ghost" onclick="closeModal();go('patients')">Open</button></td></tr>`).join('')+'</tbody></table>':'<div class="empty">No matching patients</div>'}
+ ${iv.length?'<div style="font-weight:700;margin:12px 0 6px">Invoices</div><table><tbody>'+iv.slice(0,8).map(x=>`<tr><td><b>${esc(x.no)}</b><div class="tag">${esc(patientById(x.patientId).name)} · ${money(invComputed(x).total)}</div></td><td><button class="btn sm ghost" onclick="closeModal();viewInvoice('${x.id}')">View</button></td></tr>`).join('')+'</tbody></table>':'<div class="empty">No matching invoices</div>'}`);
+}
+
+/* ---------------- BOOT ---------------- */
+restoreSession();
+document.getElementById('lgPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+window.addEventListener('load',()=>{ if(!window.JsBarcode) console.warn('Barcode lib offline — using built-in fallback'); });
+</script>
+</body>
+</html>
